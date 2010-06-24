@@ -5,7 +5,7 @@
 typedef unsigned long ulong;
 typedef unsigned char uchar;
 
-#define TABLE_INCREMENT       5
+#define TABLE_INCREMENT       50
 #define TABLE_HAS_ID          1
 #define TABLE_HAS_CREATED_AT  2
 #define TABLE_HAS_UPDATED_AT  4
@@ -82,7 +82,7 @@ uchar **table_last_index(PTable pt) {
 ** existing indices to make them point to reallocated record slots.
 */
 PTable table_extend(PTable pt) {
-    register long i;
+    register ulong i;
     register uchar **pi;
 
     puts("EXTENDING...\n");
@@ -106,6 +106,9 @@ PTable table_extend(PTable pt) {
     return pt;
 }
 
+/*
+** Find record by id and return its address.
+*/
 uchar *table_find(PTable pt, ulong id) {
     if (pt->number_of_records == 0 || id < 0 || id > pt->auto_increment) {
         return NULL;
@@ -114,8 +117,11 @@ uchar *table_find(PTable pt, ulong id) {
     }
 }
 
+/*
+** Insert a record and return its address. The table gets extended as necessary.
+*/
 uchar *table_insert(PTable pt, uchar *record) {
-    uchar **pi;
+    register uchar **pi;
 
     if (pt->number_of_records >= pt->number_of_slots) {
         pt = table_extend(pt);
@@ -127,12 +133,20 @@ uchar *table_insert(PTable pt, uchar *record) {
 
     pt->number_of_records++;
     pt->auto_increment++;
+    /*
+    ** Set record id if the table has primary key. The id is always the first
+    ** unsigned long of the record.
+    */
+    if (pt->flags & TABLE_HAS_ID) {
+        *(ulong *)*pi = pt->auto_increment;
+    }
 
     return *pi;
 }
 
-
-
+/*
+** Release pt->slots and pt->index memory chunks, then free the table itself.
+*/
 PTable table_free(PTable pt) {
     if (pt) {
         if (pt->index) {
@@ -153,21 +167,23 @@ int main() {
     typedef struct {
         ulong id;
         char name[30];
+        ulong created_at;
+        ulong updated_at;
     } Record;
 
     Record rec, *prec;
     int i;
 
-    pt = table_initialize(sizeof(Record), 0);
-    for(i = 0;  i <= 100;  i++) {
-        rec.id = i;
+    pt = table_initialize(sizeof(Record), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
+    for(i = 0;  i <= 1000;  i++) {
+        // rec.id = i;
         prec = (Record *)table_insert(pt, (uchar *)&rec);
         printf("%08lX, %08lX (id: %lu)\n", (ulong)*table_last_record(pt), (ulong)table_last_record(pt), prec->id);
     }
 
-    for(i = 100;  i >= 0;  i--) {
+    for(i = 1000;  i >= 0;  i--) {
         prec = (Record *)table_find(pt, i);
-        printf("id: %lu\n", prec->id);
+        printf("id: %08lX\n", prec->id);
     }
 
     table_free(pt);
