@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 typedef unsigned long ulong;
 typedef unsigned char uchar;
@@ -122,6 +123,7 @@ uchar *table_find(PTable pt, ulong id) {
 */
 uchar *table_insert(PTable pt, uchar *record) {
     register uchar **pi;
+    register time_t now;
 
     if (pt->number_of_records >= pt->number_of_slots) {
         pt = table_extend(pt);
@@ -134,13 +136,23 @@ uchar *table_insert(PTable pt, uchar *record) {
     pt->number_of_records++;
     pt->auto_increment++;
     /*
-    ** Set record id if the table has primary key. The id is always the first
-    ** unsigned long of the record.
+    ** Update record id if the table has primary key. The id must be the first
+    ** record field of type "unsigned long".
     */
     if (pt->flags & TABLE_HAS_ID) {
         *(ulong *)*pi = pt->auto_increment;
     }
-
+    /*
+    ** Update created_at and/or updated_at which must be last one or two record
+    ** fields of type "time_t".
+    */
+    if (pt->flags & TABLE_HAS_CREATED_AT || pt->flags & TABLE_HAS_UPDATED_AT) {
+        now = time(NULL);
+        *(time_t *)(*pi + pt->record_size - sizeof(time_t)) = now;
+    }
+    if (pt->flags & TABLE_HAS_CREATED_AT && pt->flags & TABLE_HAS_UPDATED_AT) {
+        *(time_t *)(*pi + pt->record_size - sizeof(time_t) * 2) = now;
+    }
     return *pi;
 }
 
@@ -166,24 +178,33 @@ int main() {
     PTable pt;
     typedef struct {
         ulong id;
+        ulong id2;
         char name[30];
-        ulong created_at;
-        ulong updated_at;
+        time_t created_at;
+        time_t updated_at;
     } Record;
 
     Record rec, *prec;
     int i;
 
     pt = table_initialize(sizeof(Record), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
-    for(i = 0;  i <= 1000;  i++) {
-        // rec.id = i;
+    for(i = 0;  i <= 100;  i++) {
+        rec.id = 0;
+        rec.id2 = 42;
+        rec.created_at = rec.updated_at = (time_t)0;
         prec = (Record *)table_insert(pt, (uchar *)&rec);
-        printf("%08lX, %08lX (id: %lu)\n", (ulong)*table_last_record(pt), (ulong)table_last_record(pt), prec->id);
+        printf("%08lX, %08lX (id: %lu, id2: %lu, created_at: %lu, updated_at: %lu)\n", 
+            (ulong)*table_last_record(pt),
+            (ulong)table_last_record(pt),
+            prec->id, prec->id2,
+            (ulong)prec->created_at,
+            (ulong)prec->updated_at);
     }
 
-    for(i = 1000;  i >= 0;  i--) {
+    for(i = 100;  i >= 0;  i--) {
         prec = (Record *)table_find(pt, i);
-        printf("id: %08lX\n", prec->id);
+        printf("id: %08lX, id2: %lu, created_at: %lu, updated_at: %lu)\n", 
+        prec->id, prec->id2, prec->created_at, prec->updated_at);
     }
 
     table_free(pt);
