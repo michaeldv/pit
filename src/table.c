@@ -1,10 +1,9 @@
+#include "pit.h"
+#include "table.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-typedef unsigned long ulong;
-typedef unsigned char uchar;
 
 #define TABLE_INCREMENT       50
 #define TABLE_HAS_ID          1
@@ -211,6 +210,7 @@ PTable table_free(PTable pt) {
 }
 
 
+#if defined(TEST)
 int main() {
     PTable pt;
     typedef struct {
@@ -256,3 +256,4 @@ int main() {
     printf("OK\n");
     return 0;
 }
+#endif
