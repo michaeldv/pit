@@ -108,13 +108,50 @@ PTable table_extend(PTable pt) {
 }
 
 /*
-** Find record by id and return its address.
+** Find a record by id and return its address.
 */
 uchar *table_find(PTable pt, ulong id) {
-    if (pt->number_of_records == 0 || id < 0 || id > pt->auto_increment) {
+    if (pt->number_of_records == 0 || id <= 0 || id > pt->auto_increment) {
         return NULL;
     } else {
-        return *(pt->index + id);
+        return *(pt->index + id - 1);
+    }
+}
+
+/*
+** Delete a record y its id and return the address of next record.
+*/
+uchar *table_delete(PTable pt, ulong id) {
+    register uchar *pr = (uchar *)table_find(pt, id);
+
+    if (pr) {
+        register ulong i;
+        register uchar **pi;
+        /*
+        ** Overwrite current record by shifting over remaining records.
+        */
+        memmove(pr, pr + pt->record_size, (pt->number_of_records - id) * pt->record_size);
+        /* 
+        ** Set the slot occupied by the last record to zero.
+        */
+        memset(table_last_record(pt), 0, pt->record_size);
+        /*
+        ** Set current record pointer to NULL, then update the rest of the index to point
+        ** to the shifted records.
+        */
+         pi = pt->index + id - 1;  
+        *pi++ = NULL;
+
+        printf("shift: %lu/%lu\n", id, pt->auto_increment);
+        for (i = id;  i < pt->auto_increment; i++) {
+            printf("Shift: %08lX - %08lX\n", (ulong)*pi, (ulong)(*pi - pt->record_size));
+            *pi++ -= pt->record_size;
+        }
+        pt->number_of_records--;
+
+        return pr;
+    } else {
+        return NULL;
     }
 }
 
@@ -185,10 +222,10 @@ int main() {
     } Record;
 
     Record rec, *prec;
-    int i;
+    ulong i, total = 4;
 
     pt = table_initialize(sizeof(Record), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
-    for(i = 0;  i <= 100;  i++) {
+    for(i = 0;  i < total;  i++) {
         rec.id = 0;
         rec.id2 = 42;
         rec.created_at = rec.updated_at = (time_t)0;
@@ -200,11 +237,19 @@ int main() {
             (ulong)prec->created_at,
             (ulong)prec->updated_at);
     }
+    prec = (Record *)table_delete(pt, 1);
+    prec = (Record *)table_delete(pt, 2);
+    printf("DEL/id: %08lX, id2: %lu, created_at: %lu, updated_at: %lu)\n", 
+    prec->id, prec->id2, prec->created_at, prec->updated_at);
 
-    for(i = 100;  i >= 0;  i--) {
+    for(i = total;  i > 0;  i--) {
         prec = (Record *)table_find(pt, i);
-        printf("id: %08lX, id2: %lu, created_at: %lu, updated_at: %lu)\n", 
-        prec->id, prec->id2, prec->created_at, prec->updated_at);
+        if (prec) {
+            printf("id: %08lX, id2: %lu, created_at: %lu, updated_at: %lu)\n", 
+            prec->id, prec->id2, prec->created_at, prec->updated_at);
+        } else {
+            printf("%lu not found\n", i);
+        }
     }
 
     table_free(pt);
