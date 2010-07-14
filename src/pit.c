@@ -1,7 +1,7 @@
-#include "pit.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "pit.h"
 
 static int usage() {
     printf("usage...\n");

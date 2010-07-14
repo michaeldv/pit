@@ -1,8 +1,8 @@
-#include "pit.h"
-#include "project.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "pit.h"
+#include "project.h"
 
 int pit_project(char *argv[]) {
     char **arg = &argv[1];
