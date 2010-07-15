@@ -3,22 +3,16 @@
 #include <string.h>
 #include <time.h>
 #include "pit.h"
-#include "table.h"
 
 #define TABLE_INCREMENT       5
-#define TABLE_HAS_ID          1
-#define TABLE_HAS_CREATED_AT  2
-#define TABLE_HAS_UPDATED_AT  4
-#define TABLE_HAS_TIMESTAMPS  (TABLE_HAS_CREATED_AT | TABLE_HAS_UPDATED_AT)
-
 /*
 ** Initialize the table by alloocating necessary memory chunks.
 */
-PTable table_initialize(ulong record_size, ulong flags) {
+PTable pit_table_initialize(ulong record_size, ulong flags) {
     PTable pt;
 
     pt = calloc(1, sizeof(Table));
-    pt->flags             = flags | TABLE_HAS_ID;
+    pt->flags             = flags;
     pt->record_size       = record_size;
     pt->number_of_slots   = TABLE_INCREMENT;
     pt->number_of_records = 0;
@@ -100,7 +94,8 @@ static PTable table_extend(PTable pt) {
 /*
 ** Find a record by id and return its address.
 */
-uchar *table_find(PTable pt, ulong id) {
+uchar *pit_table_find(PTable pt, ulong id) {
+    // TODO: retrn NULL (or raise?) if table doesn't have id.
     if (pt->number_of_records == 0 || id <= 0 || id > pt->auto_increment) {
         return NULL;
     } else {
@@ -112,8 +107,9 @@ uchar *table_find(PTable pt, ulong id) {
 ** Delete a record by its ID. Return the address of next record or NULL
 ** if deleted last record.
 */
-uchar *table_delete(PTable pt, ulong id) {
-    register uchar *pr = (uchar *)table_find(pt, id);
+uchar *pit_table_delete(PTable pt, ulong id) {
+    // TODO: retrn NULL (or raise?) if table doesn't have id.
+    register uchar *pr = (uchar *)pit_table_find(pt, id);
 
     if (pr) {
         register ulong i;
@@ -153,7 +149,7 @@ uchar *table_delete(PTable pt, ulong id) {
 ** Insert a record and return its address. The table gets extended
 ** as necessary.
 */
-uchar *table_insert(PTable pt, uchar *record) {
+uchar *pit_table_insert(PTable pt, uchar *record) {
     register uchar **pi;
     register time_t now;
 
@@ -191,7 +187,7 @@ uchar *table_insert(PTable pt, uchar *record) {
 /*
 ** Release pt->slots and pt->index memory chunks, then free the table itself.
 */
-PTable table_free(PTable pt) {
+PTable pit_table_free(PTable pt) {
     if (pt) {
         if (pt->index) {
             free(pt->index);
@@ -209,7 +205,7 @@ PTable table_free(PTable pt) {
 ** Save the contents of the table to file. The file handle should be
 ** open with for writing.
 */
-int table_save(FILE *file, PTable pt) {
+int pit_table_save(FILE *file, PTable pt) {
     register int written = 0;
     /*
     ** Save table header data: flags, record_size, number_of_slots,
@@ -227,7 +223,7 @@ int table_save(FILE *file, PTable pt) {
 ** Load the contents of the table from file. The file handle should be
 ** open with for reading.
 */
-PTable table_load(FILE *file) {
+PTable pit_table_load(FILE *file) {
     PTable pt;
     register int read = 0;
     register ulong i;
@@ -241,7 +237,7 @@ PTable table_load(FILE *file) {
     /*
     ** Now allocate slots and index based n original  number of slots.
     */
-    printf("Allocating %lu slots\n", pt->number_of_slots);
+    /*** printf("Allocating %lu slots\n", pt->number_of_slots); ***/
     pt->slots = pr = calloc(pt->number_of_slots, pt->record_size);
     pt->index = pi = calloc(pt->number_of_slots, sizeof(uchar *));
     /*
@@ -249,6 +245,7 @@ PTable table_load(FILE *file) {
     */
     read += fread(pt->slots, pt->record_size, pt->number_of_records, file);
     for(i = 0;  i < pt->number_of_records;  i++, pi++) {
+        // TODO: if table doesn't have id || has id && id matches...
         if ((ulong)*pr == i + 1) {
             *pi = pr;
             pr += pt->record_size;
@@ -283,7 +280,7 @@ void dump_all(PTable pt) {
     Record *prec;
 
     for(i = 1;  i <= pt->number_of_slots;  i++) {
-        prec = (Record *)table_find(pt, i);
+        prec = (Record *)pit_table_find(pt, i);
         if (prec) {
             dump(prec);
         } else {
@@ -298,32 +295,32 @@ int main() {
     Record rec, *prec;
     ulong i, total = 30;
 
-    pt = table_initialize(sizeof(Record), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
+    pt = pit_table_initialize(sizeof(Record), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
     for(i = 0;  i < total;  i++) {
         rec.id = 0;
         rec.value = 0x11223344 + i + 1;
         strcpy(rec.name, "test");
         rec.created_at = rec.updated_at = (time_t)0;
 
-        prec = (Record *)table_insert(pt, (uchar *)&rec);
+        prec = (Record *)pit_table_insert(pt, (uchar *)&rec);
         dump(prec);
     }
     for (i = 20;  i < total;  i++) {
         printf("Deleting %lu\n", i + 1);
-        prec = (Record *)table_delete(pt, i + 1);
+        prec = (Record *)pit_table_delete(pt, i + 1);
     }
     dump_all(pt);
 
     FILE *file = fopen("/tmp/.pit", "w");
-    table_save(file, pt);
+    pit_table_save(file, pt);
     fclose(file);
 
     file = fopen("/tmp/.pit", "r");
-    pt = table_load(file);
+    pt = pit_table_load(file);
     dump_all(pt);
     fclose(file);
 
-    table_free(pt);
+    pit_table_free(pt);
     printf("OK\n");
     return 0;
 }

@@ -14,16 +14,22 @@ BINDIR = ./bin
 CC = gcc -g -Os -Wall
 
 SRC = \
+	$(SRCDIR)/activity.c \
+	$(SRCDIR)/db.c \
 	$(SRCDIR)/pit.c \
 	$(SRCDIR)/project.c \
 	$(SRCDIR)/table.c \
-	$(SRCDIR)/task.c
+	$(SRCDIR)/task.c \
+	$(SRCDIR)/user.c
 
 OBJ = \
+	$(SRCDIR)/activity.o \
+	$(OBJDIR)/db.o \
 	$(OBJDIR)/pit.o \
 	$(OBJDIR)/project.o \
 	$(OBJDIR)/table.o \
-	$(OBJDIR)/task.o
+	$(OBJDIR)/task.o \
+    $(SRCDIR)/user.o
 
 APP = pit
 
@@ -35,6 +41,12 @@ $(OBJDIR):
 
 $(APP): $(OBJ)
 	$(CC) -o $(BINDIR)/$(APP) $(OBJ)
+
+$(OBJDIR)/activity.o: $(SRCDIR)/activity.c $(SRCDIR)/activity.h
+	$(CC) -o $(OBJDIR)/activity.o -c $(SRCDIR)/activity.c
+
+$(OBJDIR)/db.o: $(SRCDIR)/db.c $(SRCDIR)/db.h
+	$(CC) -o $(OBJDIR)/db.o -c $(SRCDIR)/db.c
 
 $(OBJDIR)/pit.o: $(SRCDIR)/pit.c $(SRCDIR)/pit.h
 	$(CC) -o $(OBJDIR)/pit.o -c $(SRCDIR)/pit.c
@@ -48,6 +60,8 @@ $(OBJDIR)/table.o: $(SRCDIR)/table.c $(SRCDIR)/table.h
 $(OBJDIR)/task.o: $(SRCDIR)/task.c $(SRCDIR)/task.h
 	$(CC) -o $(OBJDIR)/task.o -c $(SRCDIR)/task.c
 
+$(OBJDIR)/user.o: $(SRCDIR)/user.c $(SRCDIR)/user.h
+	$(CC) -o $(OBJDIR)/user.o -c $(SRCDIR)/user.c
 
 clean:
 	rm -f $(OBJDIR)/*.o

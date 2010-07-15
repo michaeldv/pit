@@ -1,6 +1,11 @@
 #if !defined(__TABLE_H__)
 #define __TABLE_H__
 
+#define TABLE_HAS_ID          1
+#define TABLE_HAS_CREATED_AT  2
+#define TABLE_HAS_UPDATED_AT  4
+#define TABLE_HAS_TIMESTAMPS  (TABLE_HAS_CREATED_AT | TABLE_HAS_UPDATED_AT)
+
 typedef struct {
     ulong   flags;              /* Bit mask with table flags */
     ulong   record_size;        /* Record size in bytes; all records are of fixed size */
@@ -11,18 +16,12 @@ typedef struct {
     uchar **index;              /* Memory chunk to store pointers to individual records, holes for deleted record ids */
 } Table, *PTable;
 
-PTable table_initialize(ulong record_size, ulong flags);
-PTable table_free(PTable pt);
-uchar *table_find(PTable pt, ulong id);
-uchar *table_delete(PTable pt, ulong id);
-uchar *table_insert(PTable pt, uchar *record);
-int table_save(FILE *file, PTable pt);
-PTable table_load(FILE *file);
-
-static uchar *table_available_slot(PTable pt);
-static uchar *table_last_record(PTable pt);
-static uchar **table_available_index(PTable pt);
-static uchar **table_last_index(PTable pt);
-static PTable table_extend(PTable pt);
+PTable pit_table_initialize(ulong record_size, ulong flags);
+PTable pit_table_free(PTable pt);
+uchar *pit_table_find(PTable pt, ulong id);
+uchar *pit_table_delete(PTable pt, ulong id);
+uchar *pit_table_insert(PTable pt, uchar *record);
+int    pit_table_save(FILE *file, PTable pt);
+PTable pit_table_load(FILE *file);
 
 #endif

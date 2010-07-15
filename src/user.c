@@ -2,10 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 #include "pit.h"
-#include "task.h"
+#include "user.h"
 
-int pit_task(char *argv[]) {
-    printf("pit_task\n");
-    return 1;
+char *pit_current_user() {
+    return getlogin();
 }
