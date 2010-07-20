@@ -70,6 +70,6 @@ extern PTable activities;
 extern PTable users;
 
 void die(char *msg);
-void die_with_errno(char *prefix);
+void perish(char *prefix);
 
 #endif
