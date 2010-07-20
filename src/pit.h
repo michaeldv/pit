@@ -9,7 +9,6 @@ typedef unsigned char uchar;
 
 typedef struct {
     ulong  id;
-    int    current;                 /* 1 if the project is current, 0 otherwise. */
     char   name[128];               /* Project name. */
     char   status[16];              /* Project status. */
     ulong  number_of_open_tasks;    /* Number of open tasks. */
@@ -25,7 +24,6 @@ typedef struct {
 typedef struct {
     ulong  id;
     ulong  project_id;              /* Which project the task belongs to? */
-    int    current;                 /* 1 if the task is current, 0 otherwise. */
     int    priority;                /* Task priority. */
     char   name[128];               /* Task name. */
     char   status[16];              /* Task status. */
