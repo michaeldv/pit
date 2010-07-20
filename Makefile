@@ -23,13 +23,13 @@ SRC = \
 	$(SRCDIR)/user.c
 
 OBJ = \
-	$(SRCDIR)/activity.o \
+	$(OBJDIR)/activity.o \
 	$(OBJDIR)/db.o \
 	$(OBJDIR)/pit.o \
 	$(OBJDIR)/project.o \
 	$(OBJDIR)/table.o \
 	$(OBJDIR)/task.o \
-    $(SRCDIR)/user.o
+	$(OBJDIR)/user.o
 
 APP = pit
 
