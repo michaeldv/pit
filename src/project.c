@@ -27,7 +27,9 @@ static void list_projects()
 
     pit_db_load();
     for(i = 0, pp = (PProject)projects->slots;  i < projects->number_of_records;  i++, pp++) {
-        printf("%c %lu: [%s] %s\n", (pp->id == projects->current ? '*' : ' '), pp->id, pp->status, pp->name);
+        printf("%c %lu: %s (%s, %lu open task%s)\n", (pp->id == projects->current ? '*' : ' '),
+        pp->id, pp->name, pp->status,
+        pp->number_of_open_tasks, (pp->number_of_open_tasks != 1 ? "s" : ""));
     }
 }
 
@@ -43,7 +45,7 @@ static void create_project(char *name, char *status)
         memset(&p, 0, sizeof(p));
 
         if (!status) {
-            status = "open";
+            status = "active";
         }
         printf("creating project [%s], status [%s]\n", name, status);
 
@@ -68,7 +70,22 @@ static int show_project(ulong number)
     pit_db_load();
     pp = (PProject)pit_table_find(projects, number);
     if (pp) {
-        printf("%lu: [%s] %s\n", pp->id, pp->status, pp->name);
+        printf("%lu: %s (%s, %lu open task%s, %lu closed task%s)\n",
+            pp->id, pp->name, pp->status,
+            pp->number_of_open_tasks, (pp->number_of_open_tasks != 1 ? "s" : ""),
+            pp->number_of_closed_tasks, (pp->number_of_closed_tasks != 1 ? "s" : ""));
+        if (pp->number_of_open_tasks > 0) {
+            ulong i;
+            PTask pt = (PTask)tasks->slots;
+
+            puts("Open tasks:");
+            for(i = 0;  i < tasks->number_of_records;  i++, pt++) {
+                if (pt->closed_at) {
+                    continue;
+                }
+                printf("  %c %lu: %s (%lu notes)\n", (pt->id == tasks->current ? '*' : ' '), pt->id, pt->name, pt->number_of_notes);
+            }
+        }
         pit_table_mark(projects, pp->id);
         pit_db_save();
     } else {

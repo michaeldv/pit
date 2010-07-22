@@ -7,7 +7,7 @@ typedef unsigned char uchar;
 
 #include "table.h"
 
-typedef struct {
+typedef struct _Project {
     ulong  id;
     char   name[128];               /* Project name. */
     char   status[16];              /* Project status. */
@@ -21,7 +21,7 @@ typedef struct {
     time_t updated_at;              /* When the project was last updated? */
 } Project, *PProject;
 
-typedef struct {
+typedef struct _Task {
     ulong  id;
     ulong  project_id;              /* Which project the task belongs to? */
     int    priority;                /* Task priority. */
@@ -37,7 +37,7 @@ typedef struct {
     time_t updated_at;              /* When the task was last updated? */
 } Task, *PTask;
 
-typedef struct {
+typedef struct _Note {
     ulong  id;
     ulong  task_id;                 /* Task the note belongs to. */
     char   message[255];            /* The body of the note. */
@@ -47,7 +47,7 @@ typedef struct {
     time_t updated_at;              /* When the note was last updated? */
 } Note, *PNote;
 
-typedef struct {
+typedef struct _Activity {
     ulong  subject_id;              /* Reference to the specific Project, Task, or Note. */
     char   subject[16];             /* Project, Task, or Note. */
     char   message[255];            /* Log message. */
@@ -55,7 +55,7 @@ typedef struct {
     time_t created_at;              /* When log message was added? */    
 } Activity, *PActivity;
 
-typedef struct {
+typedef struct _User {
     ulong  id;
     char   username[32];            /* Username. */
     char   email[32];               /* User's email. */
