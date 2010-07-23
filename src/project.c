@@ -1,10 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 #include "pit.h"
-#include "db.h"
-#include "project.h"
 
 static int already_exist(char *name)
 {

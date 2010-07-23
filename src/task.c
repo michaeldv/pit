@@ -1,12 +1,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 #include "pit.h"
-#include "db.h"
-#include "task.h"
 
-static void list_tasks()
+/*
+** CREATING TASKS:
+**   pit task -c name [-s status] [-d deadline] [-p priority]
+**
+** UPDATING TASKS:
+**   pit task -u [number] [-n name] [-s status] [-d deadline] [-p priority]
+**
+** DELETING TASKS:
+**   pit task -d [number]
+**
+** SHOWING TASK:
+**   pit task [-s number]
+**
+** LISTING TASKS:
+**   pit task -s [all|open|closed] [-s status] [-d deadline] [-p priority]
+*/
+static void list_tasks(char *mode, char *status, char *deadline, ulong priority)
 {
     pit_db_load();
 
@@ -22,7 +35,7 @@ static void list_tasks()
     }
 }
 
-static void create_task(char *name, char *status)
+static void create_task(char *name, char *status, char *priority, time_t deadline)
 {
     pit_db_load();
 
@@ -38,13 +51,17 @@ static void create_task(char *name, char *status)
         if (!status) {
             status = "open";
         }
-        printf("creating task [%s], status [%s]\n", name, status);
+        if (!priority) {
+            priority = "normal";
+        }
+
+        printf("creating task: %s, status: %s, priority: %s, deadline: %s", name, status, priority, ctime(&deadline));
 
         strncpy(t.name, name, sizeof(t.name) - 1);
         strncpy(t.status, status, sizeof(t.status) - 1);
+        strncpy(t.priority, priority, sizeof(t.priority) - 1);
         t.project_id = pp->id;
-        t.priority = 1;
-        t.deadline = time(NULL);
+        t.deadline = deadline;
         t.number_of_notes = 0;
         t.closed_by = 0;
         t.created_by = t.updated_by = 1; // TODO
@@ -58,49 +75,88 @@ static void create_task(char *name, char *status)
     }
 }
 
-static int show_task(ulong number)
+static void show_task(ulong number)
 {
-    return 1;
+    printf("show_task(%lu)\n", number);
 }
 
-static int delete_task(ulong number)
+static void delete_task(ulong number)
 {
-    return 1;
+    printf("delete_task(%lu)\n", number);
+}
+
+static void update_task(ulong number, char *name, char *status, char *priority, time_t deadline)
+{
+    printf("update task: #%lu, name: %s, status: %s, priority: %s, deadline: %s", number, name, status, priority, ctime(&deadline));
 }
 
 int pit_task(char *argv[])
 {
     char **arg = &argv[1];
-    unsigned long number;
+    char *name = NULL, *status = NULL, *priority = NULL;
+    time_t deadline = (time_t)0;
+    ulong number = 0;
 
     if (!*arg) {
-        list_tasks();
-    } else if (!strcmp(*arg, "-c")) {
-        if (!*++arg) {
-            die("missing task name");
-        } else {
-            create_task(*arg, *(arg + 1));
-        }
-    } else if (!strcmp(*arg, "-d")) {
-        if (!*++arg) {
-            die("missing task number");
-        } else {
-            number = atoi(*arg);
-            if (!number) {
-                die("invalid task number");
-            } else {
-                delete_task(number);
-            }
-        }
- /* } else if (!strcmp(*arg, "-e")) { TODO: Edit */
+        list_tasks(NULL, NULL, NULL, 0); /* ...with default paramaters. */
     } else {
-        number = atoi(*arg);
-        if (!number) {
-            die("invalid task parameters");
-        } else {
+        switch(pit_arg_option(arg)) {
+        case 'c': /* pit task -c name [-s status] [-p priority] [-d deadline] */
+            name = pit_arg_string(++arg, "task name");
+            while(*++arg) {
+                switch(pit_arg_option(arg)) {
+                case 's':
+                    status = pit_arg_string(++arg, "task status");
+                    break;
+                case 'p':
+                    priority = pit_arg_string(++arg, "task priority");
+                    break;
+                case 'd':
+                    deadline = pit_arg_time(++arg, "task deadline");
+                    break;
+                default:
+                    die("invalid task option: %s", *arg);
+                }
+            }
+            create_task(name, status, priority, deadline);
+            break;
+        case 'u': /* pit task -u [number] [-n name] [-s status] [-d deadline] [-p priority] */
+            number = pit_arg_number(++arg, NULL);
+            if (!number) --arg;
+            while(*++arg) {
+                switch(pit_arg_option(arg)) {
+                case 'n':
+                    name = pit_arg_string(++arg, "task name");
+                    break;
+                case 's':
+                    status = pit_arg_string(++arg, "task status");
+                    break;
+                case 'p':
+                    priority = pit_arg_string(++arg, "task priority");
+                    break;
+                case 'd':
+                    deadline = pit_arg_time(++arg, "task deadline");
+                    break;
+                default:
+                    die("invalid task option: %s", *arg);
+                }
+            }
+            if (!name && !status && !priority && !deadline) {
+                die("nothing to update");
+            } else {
+                update_task(number, name, status, priority, deadline);
+            }
+            break;
+        case 'd': /* pit task -d [number] */
+            number = pit_arg_number(++arg, NULL);
+            delete_task(number);
+            break;
+        case 's': /* pit task -s [all|open|closed] [-s status] [-d deadline] [-p priority] */
+            break;
+        default: /* pit task [number] */
+            number = pit_arg_number(++arg, NULL);
             show_task(number);
         }
     }
-
     return 1;
 }

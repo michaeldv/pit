@@ -1,11 +1,8 @@
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 #include "pit.h"
-#include "db.h"
-#include "project.h"
-#include "task.h"
 
 PTable projects;
 PTable tasks;
@@ -21,12 +18,18 @@ static int usage() {
 /*
 ** Suicide.
 */
-void die(char *msg)
+void die(char *message, ...)
 {
-    fprintf(stderr, "pit: %s\n", msg);
+    char str[4096];
+    va_list params;
+
+    va_start(params, message);
+      vsnprintf(str, sizeof(str), message, params);
+      fprintf(stderr, "pit: %s\n", str);
+    va_end(params);
+
     exit(0);
 }
-
 /*
 ** Forceful death.
 */

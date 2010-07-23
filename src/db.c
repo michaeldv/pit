@@ -5,9 +5,6 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include "pit.h"
-#include "db.h"
-#include "activity.h"
-#include "user.h"
 
 #define PITFILE "~/.pit"
 

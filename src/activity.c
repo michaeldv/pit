@@ -1,9 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 #include "pit.h"
-#include "activity.h"
 
 ulong  subject_id;              /* Reference to the specific Project, Task, or Note. */
 char   subject[16];             /* Project, Task, or Note. */
