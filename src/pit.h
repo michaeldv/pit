@@ -10,11 +10,17 @@ typedef unsigned char uchar;
 #include "table.h"
 
 /* Externals. */
+extern PTable activities;
+extern PTable notes;
 extern PTable projects;
 extern PTable tasks;
-extern PTable notes;
-extern PTable activities;
 extern PTable users;
+
+#define for_each_activity(ptr) for (ptr = (PActivity)tasks->slots; (ptr - (PActivity)tasks->slots) / sizeof(PActivity) < tasks->number_of_records; ptr++)
+#define for_each_note(ptr)     for (ptr = (PNote)tasks->slots;     (ptr - (PNote)tasks->slots)     / sizeof(PNote)     < tasks->number_of_records; ptr++)
+#define for_each_project(ptr)  for (ptr = (PProject)tasks->slots;  (ptr - (PProject)tasks->slots)  / sizeof(PProject)  < tasks->number_of_records; ptr++)
+#define for_each_task(ptr)     for (ptr = (PTask)tasks->slots;     (ptr - (PTask)tasks->slots)     / sizeof(PTask)     < tasks->number_of_records; ptr++)
+#define for_each_user(ptr)     for (ptr = (PUser)users->slots;     (ptr - (PUser)users->slots)     / sizeof(PUser)     < users->number_of_records; ptr++)
 
 /* Command line parsing. */
 int    pit_arg_is_option(char **arg);

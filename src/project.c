@@ -5,11 +5,10 @@
 
 static int already_exist(char *name)
 {
-    ulong i;
     PProject pp;
 
     pit_db_load();
-    for(i = 0, pp = (PProject)projects->slots;  i < projects->number_of_records;  i++, pp++) {
+    for_each_project(pp) {
         if (!strcmp(pp->name, name)) {
             return 1;
         }
@@ -19,11 +18,10 @@ static int already_exist(char *name)
 
 static void list_projects()
 {
-    ulong i;
     PProject pp;
 
     pit_db_load();
-    for(i = 0, pp = (PProject)projects->slots;  i < projects->number_of_records;  i++, pp++) {
+    for_each_project(pp) {
         printf("%c %lu: %s (%s, %lu open task%s)\n", (pp->id == projects->current ? '*' : ' '),
         pp->id, pp->name, pp->status,
         pp->number_of_open_tasks, (pp->number_of_open_tasks != 1 ? "s" : ""));
@@ -72,11 +70,10 @@ static int show_project(ulong number)
             pp->number_of_open_tasks, (pp->number_of_open_tasks != 1 ? "s" : ""),
             pp->number_of_closed_tasks, (pp->number_of_closed_tasks != 1 ? "s" : ""));
         if (pp->number_of_open_tasks > 0) {
-            ulong i;
             PTask pt = (PTask)tasks->slots;
 
             puts("Open tasks:");
-            for(i = 0;  i < tasks->number_of_records;  i++, pt++) {
+            for_each_task(pt) {
                 if (pt->closed_at) {
                     continue;
                 }

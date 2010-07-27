@@ -23,11 +23,10 @@ static void list_tasks(char *mode, char *status, char *deadline, ulong priority)
 {
     pit_db_load();
 
-    ulong i = 0;
     PTask pt = (PTask)tasks->slots;
     PProject pp = (PProject)pit_table_current(projects);
 
-    for(; i < tasks->number_of_records; i++, pt++) {
+    for_each_task(pt) {
         if (pp && pt->project_id != pp->id) {
             continue;
         }
