@@ -33,7 +33,8 @@ ulong pit_arg_number(char **arg, char *required)
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
-    } else if (*arg) {
+    }
+    if (*arg) {
         number = atol(*arg);
         if (number == 0 && **arg != '0' && required) {
             die("invalid %s value: %s", required, *arg);
