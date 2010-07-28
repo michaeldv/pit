@@ -2,53 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <pwd.h>
-#include <sys/types.h>
 #include "pit.h"
 
 #define PITFILE "~/.pit"
 
-char *mem2str(char *mem, int len) {
-    char *str = malloc(len + 1);
-    memcpy(str, mem, len);
-    str[len] = '\0';
-
-    return str;
-}
-
-static char *home_dir(char *username, int len) {
-    char *str = mem2str(username, len);
-    struct passwd *pw = getpwnam(str);
-    free(str);
-
-    return (pw ? pw->pw_dir : NULL);
-}
-
-static char *expand_path(char *path, char *expanded) {
-    if (!path || *path != '~') {
-        return path;
-    } else {
-        char *next = path + 1;
-        if (*next == '/') { /* Path without the username, i.e. ~/file */
-            strcpy(expanded, getenv("HOME"));
-            strcat(expanded, next);
-        } else {            /* Path with the username, i.e. ~username/file */
-            char *slash = strchr(next, '/');
-            if (!slash) {
-                slash = next + strlen(next);
-            }
-            char *home = home_dir(next, slash - next);
-            if (!home) {    /* Ex. non-existent username. */
-                perish(path);
-            } else {
-                strcpy(expanded, home);
-                strcat(expanded, slash);
-            }
-        }
-    }
-
-    return expanded;
-}
 
 static char *pit_file_name()
 {

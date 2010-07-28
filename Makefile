@@ -17,21 +17,25 @@ SRC = \
 	$(SRCDIR)/activity.c \
 	$(SRCDIR)/args.c \
 	$(SRCDIR)/db.c \
+	$(SRCDIR)/pager.c \
 	$(SRCDIR)/pit.c \
 	$(SRCDIR)/project.c \
 	$(SRCDIR)/table.c \
 	$(SRCDIR)/task.c \
-	$(SRCDIR)/user.c
+	$(SRCDIR)/user.c \
+	$(SRCDIR)/util.c
 
 OBJ = \
 	$(OBJDIR)/activity.o \
 	$(OBJDIR)/args.o \
 	$(OBJDIR)/db.o \
+	$(OBJDIR)/pager.o \
 	$(OBJDIR)/pit.o \
 	$(OBJDIR)/project.o \
 	$(OBJDIR)/table.o \
 	$(OBJDIR)/task.o \
-	$(OBJDIR)/user.o
+	$(OBJDIR)/user.o \
+	$(OBJDIR)/util.o
 
 APP = pit
 
@@ -44,29 +48,35 @@ $(OBJDIR):
 $(APP): $(OBJ)
 	$(CC) -o $(BINDIR)/$(APP) $(OBJ)
 
-$(OBJDIR)/activity.o: $(SRCDIR)/activity.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/activity.o: $(SRCDIR)/activity.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/activity.o -c $(SRCDIR)/activity.c
 
-$(OBJDIR)/args.o: $(SRCDIR)/args.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/args.o: $(SRCDIR)/args.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/args.o -c $(SRCDIR)/args.c
 
-$(OBJDIR)/db.o: $(SRCDIR)/db.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/db.o: $(SRCDIR)/db.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/db.o -c $(SRCDIR)/db.c
 
-$(OBJDIR)/pit.o: $(SRCDIR)/pit.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/pager.o: $(SRCDIR)/pager.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
+	$(CC) -o $(OBJDIR)/pager.o -c $(SRCDIR)/pager.c
+
+$(OBJDIR)/pit.o: $(SRCDIR)/pit.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/pit.o -c $(SRCDIR)/pit.c
 
-$(OBJDIR)/project.o: $(SRCDIR)/project.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/project.o: $(SRCDIR)/project.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/project.o -c $(SRCDIR)/project.c
 
-$(OBJDIR)/table.o: $(SRCDIR)/table.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/table.o: $(SRCDIR)/table.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/table.o -c $(SRCDIR)/table.c
 
-$(OBJDIR)/task.o: $(SRCDIR)/task.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/task.o: $(SRCDIR)/task.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/task.o -c $(SRCDIR)/task.c
 
-$(OBJDIR)/user.o: $(SRCDIR)/user.c $(SRCDIR)/pit.h $(SRCDIR)/models.h $(SRCDIR)/table.h
+$(OBJDIR)/user.o: $(SRCDIR)/user.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/user.o -c $(SRCDIR)/user.c
+
+$(OBJDIR)/util.o: $(SRCDIR)/util.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
+	$(CC) -o $(OBJDIR)/util.o -c $(SRCDIR)/util.c
 
 clean:
 	rm -f $(OBJDIR)/*.o
