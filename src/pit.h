@@ -8,6 +8,7 @@ typedef unsigned char uchar;
 #include <time.h>
 #include "object.h"
 #include "table.h"
+#include "pager.h"
 
 /* Externals. */
 extern PTable activities;

@@ -197,7 +197,7 @@ uchar *pit_table_mark(PTable pt, ulong id) {
 /*
 ** Release pt->slots and pt->index memory chunks, then free the table itself.
 */
-PTable pit_table_free(PTable pt) {
+void pit_table_free(PTable pt) {
     if (pt) {
         if (pt->index) {
             free(pt->index);
@@ -207,8 +207,6 @@ PTable pit_table_free(PTable pt) {
         }
         free(pt);
     }
-
-    return NULL;
 }
 
 /*

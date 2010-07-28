@@ -6,7 +6,7 @@
 #define TABLE_HAS_UPDATED_AT  4
 #define TABLE_HAS_TIMESTAMPS  (TABLE_HAS_CREATED_AT | TABLE_HAS_UPDATED_AT)
 
-typedef struct {
+typedef struct _Table {
     ulong   flags;              /* Bit mask with table flags. */
     ulong   record_size;        /* Record size in bytes; all records are of fixed size. */
     ulong   number_of_slots;    /* Number of slots allocated, each slot is 'record_size' long. */
@@ -18,7 +18,7 @@ typedef struct {
 } Table, *PTable;
 
 PTable pit_table_initialize(ulong record_size, ulong flags);
-PTable pit_table_free(PTable pt);
+void   pit_table_free(PTable pt);
 uchar *pit_table_find(PTable pt, ulong id);
 uchar *pit_table_delete(PTable pt, ulong id);
 uchar *pit_table_insert(PTable pt, uchar *record);
