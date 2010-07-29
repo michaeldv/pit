@@ -19,12 +19,15 @@ static int already_exist(char *name)
 static void list_projects()
 {
     PProject pp;
+    PPager   ppager;
 
     pit_db_load();
-    for_each_project(pp) {
-        printf("%c %lu: %s (%s, %lu open task%s)\n", (pp->id == projects->current ? '*' : ' '),
-        pp->id, pp->name, pp->status,
-        pp->number_of_open_tasks, (pp->number_of_open_tasks != 1 ? "s" : ""));
+    if (projects->number_of_records > 0) {
+        ppager = pit_pager_initialize(PAGER_PROJECT, projects->number_of_records);
+        for_each_project(pp) {
+            pit_pager_print(ppager, (uchar *)pp);
+        }
+        pit_pager_flush(ppager);
     }
 }
 

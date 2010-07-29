@@ -29,16 +29,21 @@ static void task_parse_options(char **arg, char **name, char **status, char **pr
 
 static void task_list(char *name, char *status, char *priority, time_t deadline)
 {
+    PProject pp;
+    PTask    pt;
+    PPager   ppager;
+
     pit_db_load();
-
-    PTask pt = (PTask)tasks->slots;
-    PProject pp = (PProject)pit_table_current(projects);
-
-    for_each_task(pt) {
-        if (pp && pt->project_id != pp->id) {
-            continue;
+    if (tasks->number_of_records > 0) {
+        pp = (PProject)pit_table_current(projects);
+        ppager = pit_pager_initialize(PAGER_TASK, tasks->number_of_records);
+        for_each_task(pt) {
+            if (pp && pt->project_id != pp->id) {
+                continue;
+            }
+            pit_pager_print(ppager, (uchar *)pt);
         }
-        printf("%c %lu: [%s] %s (%lu notes)\n", (pt->id == tasks->current ? '*' : ' '), pt->id, pt->status, pt->name, pt->number_of_notes);
+        pit_pager_flush(ppager);
     }
 }
 

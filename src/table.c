@@ -8,9 +8,8 @@
 ** Initialize the table by alloocating necessary memory chunks.
 */
 PTable pit_table_initialize(ulong record_size, ulong flags) {
-    PTable pt;
+    PTable pt = calloc(1, sizeof(Table));
 
-    pt = calloc(1, sizeof(Table));
     pt->flags             = flags;
     pt->record_size       = record_size;
     pt->number_of_slots   = TABLE_INCREMENT;

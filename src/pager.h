@@ -10,17 +10,26 @@
 typedef struct _Pager {
     ulong   type;
     ulong   number_of_entries;
-    int     max_id;
-    int     max_name;
-    int     max_status;
-    int     max_priority;
-    int     min_deadline;
-    uchar  *entries;
+    uchar   *entries;
+    union {
+        struct {
+            int id;
+            int name;
+            int status;
+        } project;
+        struct {
+            int id;
+            int name;
+            int status;
+            int priority;
+            int deadline;
+        } task;
+    } max;
 } Pager, *PPager;
 
-PPager pit_pager_initialize(ulong number_of_entries);
-uchar *pit_pager_add(PPager pp, uchar *entry);
-void   pit_pager_dump(PPager pp);
-void   pit_pager_free(PPager pp, int deep);
+PPager pit_pager_initialize(ulong type, ulong number_of_entries);
+void   pit_pager_print(PPager ppager, uchar *entry);
+void   pit_pager_flush(PPager ppager);
+void   pit_pager_free(PPager ppager);
 
 #endif
