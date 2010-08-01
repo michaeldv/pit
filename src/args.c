@@ -104,26 +104,24 @@ time_t pit_arg_date(char **arg, char *required)
 
 time_t pit_arg_time(char **arg, char *required)
 {
-    time_t seconds = (time_t)-1;
-    char *format;
-    struct tm tm;
+    int seconds = 0;
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
-    } else {
-        memset(&tm, 0, sizeof(tm));         /* Suppored time formats are HH, HH:MM, and :MM */
-        if (**arg == ':') {
-            format = ":%M";                 /* Minutes only */
-        } else if (strchr(*arg, ':')) {
-            format = "%H:%M";               /* Hours and minutes */
-        } else {
-            format = "%H";                  /* Hours only */
+    } else {                                /* Suppored time formats are :MM, HH:MM, and HH */
+        char *colon = strchr(*arg, ':');
+        if (colon == *arg) {                /* :MM - minutes only */
+            seconds = atoi(++colon) * 60;
+        } else if (colon) {                 /* HH:MM - hours and minutes */
+            *colon = '\0';
+            seconds = atoi(*arg) * 3600 + atoi(++colon) * 60;
+        } else {                            /* HH - hours only */
+            seconds = atoi(*arg) * 3600;
         }
-        if (strptime(*arg, format, &tm)) {
-            seconds = mktime(&tm);
-        } else {
-            die("invalid time format: %s", *arg);
-        }
+    }
+
+    if (!seconds) {
+        die("invalid time format: %s", *arg);
     }
 
     return seconds;

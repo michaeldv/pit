@@ -62,6 +62,30 @@ char *expand_path(char *path, char *expanded) {
     return expanded;
 }
 
+char *format_date(time_t date)
+{
+    static char str[32];
+    struct tm *ptm;
+
+    ptm = localtime(&date);
+    if (!ptm->tm_hour && !ptm->tm_min && !ptm->tm_sec) {
+        strftime(str, sizeof(str), "%b %d, %Y", ptm);
+    } else {
+        strftime(str, sizeof(str), "%b %d, %Y %H:%M", ptm);
+    }
+    return str;
+}
+
+char *format_time(time_t time)
+{
+    static char str[10];
+    int hh = time / 3600;
+    int mm = (time - hh * 3600) / 60;
+
+    sprintf(str, "%d:%02d", hh, mm);
+    return str;
+}
+
 #ifdef TEST
 int main(int argc, char *argv[]) {
     printf("your username: %s\n", current_user());

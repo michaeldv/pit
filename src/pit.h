@@ -67,5 +67,7 @@ char *mem2str(char *mem, int len);
 char *current_user();
 char *home_dir(char *username, int len);
 char *expand_path(char *path, char *expanded);
+char *format_date(time_t date);
+char *format_time(time_t time);
 
 #endif

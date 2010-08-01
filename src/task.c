@@ -73,7 +73,7 @@ static void task_create(char *name, char *status, char *priority, time_t date, t
         strncpy(t.username, current_user(), sizeof(t.username) - 1);
         t.project_id = pp->id;
         t.date = date;
-        t.time = 0; /* TODO */
+        t.time = time;
 
         pt = (PTask)pit_table_insert(tasks, (uchar *)&t);
         pit_table_mark(tasks, pt->id);
