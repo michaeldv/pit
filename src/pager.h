@@ -1,11 +1,10 @@
 #if !defined(__PAGER_H__)
 #define __PAGER_H__
 
-#define PAGER_ACTIVITY  1
-#define PAGER_PROJECT   2
-#define PAGER_TASK      4
-#define PAGER_NOTE      8
-#define PAGER_USER     16
+#define PAGER_ACTION  1
+#define PAGER_PROJECT 2
+#define PAGER_TASK    4
+#define PAGER_NOTE    8
 
 typedef struct _Pager {
     ulong   type;
@@ -14,16 +13,23 @@ typedef struct _Pager {
     union {
         struct {
             int id;
+            int username;
             int name;
             int status;
         } project;
         struct {
             int id;
+            int username;
             int name;
             int status;
             int priority;
-            int deadline;
+            int date;
+            int time;
         } task;
+        struct {
+            int username;
+            int subject;
+        } action;
     } max;
 } Pager, *PPager;
 

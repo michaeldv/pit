@@ -7,8 +7,7 @@
 PTable projects;
 PTable tasks;
 PTable notes;
-PTable activities;
-PTable users;
+PTable actions;
 
 static int usage() {
     printf("usage...\n");
@@ -62,7 +61,7 @@ int main(int argc, char *argv[]) {
         } else if (strstr(commands[2], argv[1]) == commands[2]) {
             return 1; /* pit_note(&argv[1]); */
         } else if (strstr(commands[3], argv[1]) == commands[3]) {
-            return 1; /* pit_log(&argv[1]); */
+            return pit_log(&argv[1]);
         } else if (strstr(commands[4], argv[1]) == commands[4]) {
             return pit_init(&argv[1]);
         }

@@ -27,6 +27,7 @@ void pit_pager_print(PPager ppager, uchar *entry)
         case PAGER_TASK:
             sprintf(str, "%lu", ((PTask)*pentry)->id);
             ppager->max.task.id = max(ppager->max.task.id, strlen(str));
+            ppager->max.task.username = max(ppager->max.task.username, strlen(((PTask)*pentry)->username));
             ppager->max.task.name = max(ppager->max.task.name, strlen(((PTask)*pentry)->name));
             ppager->max.task.status = max(ppager->max.task.status, strlen(((PTask)*pentry)->status));
             ppager->max.task.priority = max(ppager->max.task.priority, strlen(((PTask)*pentry)->priority));
@@ -34,8 +35,13 @@ void pit_pager_print(PPager ppager, uchar *entry)
         case PAGER_PROJECT:
             sprintf(str, "%lu", ((PProject)*pentry)->id);
             ppager->max.project.id = max(ppager->max.project.id, strlen(str));
+            ppager->max.project.username = max(ppager->max.project.username, strlen(((PProject)*pentry)->username));
             ppager->max.project.name = max(ppager->max.project.name, strlen(((PProject)*pentry)->name));
             ppager->max.project.status = max(ppager->max.project.status, strlen(((PProject)*pentry)->status));
+            break;
+        case PAGER_ACTION:
+            ppager->max.action.username = max(ppager->max.action.username, strlen(((PAction)*pentry)->username));
+            ppager->max.action.subject = max(ppager->max.action.subject, strlen(((PAction)*pentry)->subject));
             break;
         default:
             die("invalid pager type: %d\n", ppager->type);
@@ -46,17 +52,18 @@ void pit_pager_print(PPager ppager, uchar *entry)
 void pit_pager_flush(PPager ppager)
 {
     uchar **pentry;
-    char format[64];
+    char format[64], timestamp[32];
 
     switch(ppager->type) {
     case PAGER_TASK:
-        sprintf(format, "%%c %%%dlu: %%-%ds %%-%ds %%-%ds (%%lu note%%s)\n",
-            ppager->max.task.id, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.name
+        sprintf(format, "%%c %%%dlu: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds  (%%lu note%%s)\n",
+            ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.name
         );
         for_each_entry(ppager, pentry) {
             printf(format, 
                 (((PTask)*pentry)->id == tasks->current ? '*' : ' '),
                 ((PTask)*pentry)->id,
+                ((PTask)*pentry)->username,
                 ((PTask)*pentry)->status,
                 ((PTask)*pentry)->priority,
                 ((PTask)*pentry)->name,
@@ -66,18 +73,29 @@ void pit_pager_flush(PPager ppager)
         }
         break;
     case PAGER_PROJECT:
-        sprintf(format, "%%c %%%dlu: %%-%ds %%-%ds (%%lu open, %%lu closed task%%s)\n",
-            ppager->max.project.id, ppager->max.project.status, ppager->max.project.name
+        sprintf(format, "%%c %%%dlu: (%%-%ds) [%%-%ds] %%-%ds (%%lu task%%s)\n",
+            ppager->max.project.id, ppager->max.project.username, ppager->max.project.status, ppager->max.project.name
         );
         for_each_entry(ppager, pentry) {
             printf(format,
                 (((PProject)*pentry)->id == projects->current ? '*' : ' '),
                 ((PProject)*pentry)->id,
+                ((PProject)*pentry)->username,
                 ((PProject)*pentry)->status,
                 ((PProject)*pentry)->name,
-                ((PProject)*pentry)->number_of_open_tasks,
-                ((PProject)*pentry)->number_of_closed_tasks,
+                ((PProject)*pentry)->number_of_tasks,
                 (projects->number_of_records != 1 ? "s" : "")
+            );
+        }
+        break;
+    case PAGER_ACTION:
+        sprintf(format, "%%s (%%-%ds): %%s\n", ppager->max.action.username);
+        for_each_entry(ppager, pentry) {
+            strftime(timestamp, sizeof(timestamp), "%b %d, %Y %H:%M", localtime(&((PAction)*pentry)->created_at));
+            printf(format,
+                timestamp,
+                ((PAction)*pentry)->username,
+                ((PAction)*pentry)->message
             );
         }
         break;

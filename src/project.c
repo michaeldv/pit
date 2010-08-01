@@ -42,19 +42,13 @@ static void create_project(char *name, char *status)
 
         memset(&p, 0, sizeof(p));
 
-        if (!status) {
-            status = "active";
-        }
+        if (!status) status = "active";
         printf("creating project [%s], status [%s]\n", name, status);
 
         strncpy(p.name, name, sizeof(p.name) - 1);
         strncpy(p.status, status, sizeof(p.status) - 1);
-        p.number_of_open_tasks = 0;
-        p.number_of_closed_tasks = 0;
-        p.closed_by = 0;
-        p.created_by = p.updated_by = 1; // TODO
-        p.closed_at = 0;
-        p.created_at = p.updated_at = time(NULL);
+        strncpy(p.username, current_user(), sizeof(p.username) - 1);
+
         pp = (PProject)pit_table_insert(projects, (uchar *)&p);
         pit_table_mark(projects, pp->id);
         pit_db_save();
@@ -68,18 +62,13 @@ static int show_project(ulong number)
     pit_db_load();
     pp = (PProject)pit_table_find(projects, number);
     if (pp) {
-        printf("%lu: %s (%s, %lu open task%s, %lu closed task%s)\n",
-            pp->id, pp->name, pp->status,
-            pp->number_of_open_tasks, (pp->number_of_open_tasks != 1 ? "s" : ""),
-            pp->number_of_closed_tasks, (pp->number_of_closed_tasks != 1 ? "s" : ""));
-        if (pp->number_of_open_tasks > 0) {
+        printf("%lu: %s (%s, %lu task%s)\n",
+            pp->id, pp->name, pp->status, pp->number_of_tasks, (pp->number_of_tasks != 1 ? "s" : ""));
+        if (pp->number_of_tasks > 0) {
             PTask pt = (PTask)tasks->slots;
 
-            puts("Open tasks:");
+            puts("Tasks:");
             for_each_task(pt) {
-                if (pt->closed_at) {
-                    continue;
-                }
                 printf("  %c %lu: %s (%lu notes)\n", (pt->id == tasks->current ? '*' : ' '), pt->id, pt->name, pt->number_of_notes);
             }
         }

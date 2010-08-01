@@ -14,7 +14,7 @@ BINDIR = ./bin
 CC = gcc -g -Os -Wall
 
 SRC = \
-	$(SRCDIR)/activity.c \
+	$(SRCDIR)/action.c \
 	$(SRCDIR)/args.c \
 	$(SRCDIR)/db.c \
 	$(SRCDIR)/pager.c \
@@ -22,11 +22,10 @@ SRC = \
 	$(SRCDIR)/project.c \
 	$(SRCDIR)/table.c \
 	$(SRCDIR)/task.c \
-	$(SRCDIR)/user.c \
 	$(SRCDIR)/util.c
 
 OBJ = \
-	$(OBJDIR)/activity.o \
+	$(OBJDIR)/action.o \
 	$(OBJDIR)/args.o \
 	$(OBJDIR)/db.o \
 	$(OBJDIR)/pager.o \
@@ -34,7 +33,6 @@ OBJ = \
 	$(OBJDIR)/project.o \
 	$(OBJDIR)/table.o \
 	$(OBJDIR)/task.o \
-	$(OBJDIR)/user.o \
 	$(OBJDIR)/util.o
 
 APP = pit
@@ -48,8 +46,8 @@ $(OBJDIR):
 $(APP): $(OBJ)
 	$(CC) -o $(BINDIR)/$(APP) $(OBJ)
 
-$(OBJDIR)/activity.o: $(SRCDIR)/activity.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
-	$(CC) -o $(OBJDIR)/activity.o -c $(SRCDIR)/activity.c
+$(OBJDIR)/action.o: $(SRCDIR)/action.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
+	$(CC) -o $(OBJDIR)/action.o -c $(SRCDIR)/action.c
 
 $(OBJDIR)/args.o: $(SRCDIR)/args.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/args.o -c $(SRCDIR)/args.c
@@ -71,9 +69,6 @@ $(OBJDIR)/table.o: $(SRCDIR)/table.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR
 
 $(OBJDIR)/task.o: $(SRCDIR)/task.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/task.o -c $(SRCDIR)/task.c
-
-$(OBJDIR)/user.o: $(SRCDIR)/user.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
-	$(CC) -o $(OBJDIR)/user.o -c $(SRCDIR)/user.c
 
 $(OBJDIR)/util.o: $(SRCDIR)/util.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/util.o -c $(SRCDIR)/util.c

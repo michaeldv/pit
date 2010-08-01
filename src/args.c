@@ -46,7 +46,7 @@ ulong pit_arg_number(char **arg, char *required)
 
 // char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm);
 // time_t mktime ( struct tm * timeptr );
-time_t pit_arg_time(char **arg, char *required)
+time_t pit_arg_date(char **arg, char *required)
 {
     time_t seconds = (time_t)-1;
     struct tm tm;
@@ -96,6 +96,33 @@ time_t pit_arg_time(char **arg, char *required)
 
         if (seconds == (time_t)-1) {
             die("invalid %s: %s", required, *arg);
+        }
+    }
+
+    return seconds;
+}
+
+time_t pit_arg_time(char **arg, char *required)
+{
+    time_t seconds = (time_t)-1;
+    char *format;
+    struct tm tm;
+
+    if (required && (!*arg || pit_arg_is_option(arg))) {
+        die("missing %s", required);
+    } else {
+        memset(&tm, 0, sizeof(tm));         /* Suppored time formats are HH, HH:MM, and :MM */
+        if (**arg == ':') {
+            format = ":%M";                 /* Minutes only */
+        } else if (strchr(*arg, ':')) {
+            format = "%H:%M";               /* Hours and minutes */
+        } else {
+            format = "%H";                  /* Hours only */
+        }
+        if (strptime(*arg, format, &tm)) {
+            seconds = mktime(&tm);
+        } else {
+            die("invalid time format: %s", *arg);
         }
     }
 

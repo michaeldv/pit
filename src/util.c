@@ -14,6 +14,20 @@ char *mem2str(char *mem, int len) {
     return str;
 }
 
+char *current_user() {
+    static char *username = NULL;
+
+    if (!username) {
+        struct passwd *pws = getpwuid(geteuid());
+        if (!pws) {
+            perish("no username?!");
+        } else {
+            username = pws->pw_name;
+        }
+    }
+    return username;
+}
+
 char *home_dir(char *username, int len) {
     char *str = mem2str(username, len);
     struct passwd *pw = getpwnam(str);
@@ -47,3 +61,11 @@ char *expand_path(char *path, char *expanded) {
 
     return expanded;
 }
+
+#ifdef TEST
+int main(int argc, char *argv[]) {
+    printf("your username: %s\n", current_user());
+    printf("your (cached) username: %s\n", current_user());
+    return 1;
+}
+#endif
