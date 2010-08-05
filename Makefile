@@ -79,3 +79,7 @@ clean:
 	rmdir $(OBJDIR)
 	rmdir $(BINDIR)
 
+.PHONY : test
+test:
+	./test/pit_test.rb
+	rm -f ./test/.pitfile

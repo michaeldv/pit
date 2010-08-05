@@ -111,7 +111,7 @@ time_t pit_arg_date(char **arg, char *required)
                     strcpy(format, "%m/%d/%Y %H:%M");                   /* 10/10/1992 19:30 */
                 }
             } else {
-                if (strlen(*arg) > 12) {
+                if (strlen(*arg) >= 12) {
                     if (alpha_date) {
                         strcpy(format, "%b %d, %Y %H");                 /* Oct 10, 1992 19 */
                     } else {

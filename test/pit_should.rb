@@ -1,6 +1,6 @@
 class Hand < RuntimeError
   def oops(msg)
-    puts "\n#{msg} in #{self.backtrace[-1].sub(':', ' line ')}"
+    puts "\n#{msg} in #{self.backtrace[1].sub(':', ' line ')}"
   end
 end
 
@@ -42,17 +42,18 @@ class String
   end
 end
 
-"123".should.equal "123"
-"123".should.equal "321"
+if $0 == __FILE__
+  "123".should.equal "123"
+  "123".should.equal "321"
 
-"123".should_not.equal "321"
-"123".should_not.equal "123"
+  "123".should_not.equal "321"
+  "123".should_not.equal "123"
 
-"abc".should.match /B/i
-"abc".should.match /xyz/
+  "abc".should.match /B/i
+  "abc".should.match /xyz/
 
-"abc".should_not.match /xyz/
-"abc".should_not.match /abc/
-
+  "abc".should_not.match /xyz/
+  "abc".should_not.match /abc/
+end
 
 

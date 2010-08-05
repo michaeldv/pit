@@ -12,7 +12,8 @@ static char *pit_file_name()
     static char file_name[128];
 
     if (!*file_name) {
-        strcpy(file_name, expand_path(PITFILE, file_name));
+        char *penv = getenv("PITFILE");
+        strcpy(file_name, expand_path(penv ? penv : PITFILE, file_name));
     }
 
     return file_name;
