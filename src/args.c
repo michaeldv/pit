@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "pit.h"
 
 int pit_arg_is_option(char **arg)
@@ -44,57 +45,116 @@ ulong pit_arg_number(char **arg, char *required)
     return number;
 }
 
-// char *strptime(const char *restrict buf, const char *restrict format, struct tm *restrict tm);
-// time_t mktime ( struct tm * timeptr );
+static char *adjust_alpha_date(char **arg, char *format)
+{
+    char *pch = strstr(*arg, ", ");
+
+    if (pch) {
+        pch += 2;
+        if (isdigit(*pch) && isdigit(*(pch + 1)) && !isdigit(*(pch + 2))) {
+            inline_replace(format, "%Y", "%y");     /* Two digit year as in Oct 10, 92 19:30 */
+        }
+    } else {
+        inline_replace(format, ", %Y", "");         /* No year as in Oct 10 19:30 */
+    }
+
+    return format;
+}
+
+static char *adjust_slash_date(char **arg, char *format)
+{
+    char *first = strchr(*arg, '/');
+    char *last = strrchr(*arg, '/');
+    if (first == last++) {
+        inline_replace(format, "/%Y", "");          /* Single slash, i.e. no year as in 1/10 19:30 */
+    } else {
+        if (isdigit(*last) && isdigit(*(last + 1)) && !isdigit(*(last + 2))) {
+            inline_replace(format, "%Y", "%y");     /* Two digit year as in 1/10/92 19:30 */
+        }
+    }
+
+    return format;
+}
+
+static char *adjust_time(char **arg, char *format)
+{
+    if (strstr(*arg, "am") || strstr(*arg, "pm")) {
+        inline_replace(format, "%H", "%I");
+        strcat(format, "%p");
+    }
+    return format;
+}
+
 time_t pit_arg_date(char **arg, char *required)
 {
-    time_t seconds = (time_t)-1;
+    char format[32];
+    time_t now = time(NULL);
+    time_t seconds = (time_t)0;
+    struct tm *ptm = localtime(&now);
     struct tm tm;
-
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
     } else {
-        memset(&tm, 0, sizeof(tm));
-        if (strptime(*arg, "%m/%d/%Y", &tm)) {
-            seconds = mktime(&tm);
+        bool alpha_date = isalpha(**arg);
+        bool slash_date = (strchr(*arg, '/') != NULL);
+
+        if (alpha_date && islower(**arg)) {
+            **arg = toupper(**arg);
         }
 
-        if (strchr(*arg, ',')) {                                        /* Date present. */
-            if (strchr(*arg, ':')) {                                    /* Date and HH:MM. */
-                if (!strstr(*arg, "am") || !strstr(*arg, "pm")) {       /* Date and HH:MM am/pm. */
-                    /* Oct 10, 1992 7:30pm */
+        if (alpha_date || slash_date) {                                 /* Date is present */
+            if (strchr(*arg, ':')) {
+                if (alpha_date) {
+                    strcpy(format, "%b %d, %Y %H:%M");                  /* Oct 10, 1992 19:30 */
                 } else {
-                    /* Oct 10, 1992 19:30 */
+                    strcpy(format, "%m/%d/%Y %H:%M");                   /* 10/10/1992 19:30 */
                 }
             } else {
-                if (strlen(*arg) > 12) {                                /* Date and HH. */
-                    if (!strstr(*arg, "am") || !strstr(*arg, "pm")) {   /* Date and HH am/pm. */
-                        /* Oct 10, 1992 7pm */
+                if (strlen(*arg) > 12) {
+                    if (alpha_date) {
+                        strcpy(format, "%b %d, %Y %H");                 /* Oct 10, 1992 19 */
                     } else {
-                        /* Oct 10, 1992 19 */                           /* HH */
+                        strcpy(format, "%m/%d/%Y %H");                  /* 10/10/1992 19 */
                     }
-                } else {                                                /* Date with no time. */
-                    /* Oct 10, 1992 19 */
+                } else {                                                /* Date with no time */
+                    if (alpha_date) {
+                        strcpy(format, "%b %d, %Y");                    /* Oct 10, 1992 */
+                    } else {
+                        strcpy(format, "%m/%d/%Y");                     /* 10/10/1992 */
+                    }
                 }
             }
-        } else {                                                        /* No date, time only. */
-            if (strchr(*arg, ':')) {                                    /* HH:MM. */
-                if (!strstr(*arg, "am") || !strstr(*arg, "pm")) {       /* HH:MM am/pm. */
-                    /* 7:30pm */
-                } else {
-                    /* 19:30 */
-                }
+            if (alpha_date) {                                           /* Replace %Y with %y for two-digit year... */
+                adjust_alpha_date(arg, format);                         /* or remove %Y if no year was specified */
             } else {
-                if (!strstr(*arg, "am") || !strstr(*arg, "pm")) {       /* HH am/pm. */
-                    /* 7pm */
-                } else {
-                    /* 19 */                                            /* HH */
-                }
+                adjust_slash_date(arg, format);
+            }
+        } else {                                                        /* No date, time only */
+            if (strchr(*arg, ':')) {
+                strcpy(format, "%H:%M");                                /* 19:30 */
+            } else {
+                strcpy(format, "%H");                                   /* 19 */
             }
         }
+        adjust_time(arg, format);                                       /* Replace %H with %I%p for am/pm time */
 
-        if (seconds == (time_t)-1) {
+        /* Ready to roll :-) */
+        memset(&tm, 0, sizeof(tm));
+        // printf("format: %s\n", format);
+        if (strptime(*arg, format, &tm)) {
+            printf("then: %s\n", asctime(&tm));
+            if (!tm.tm_mday) tm.tm_mday  = ptm->tm_mday;
+            if (!tm.tm_mon)  tm.tm_mon   = ptm->tm_mon;
+            if (!tm.tm_year) tm.tm_year  = ptm->tm_year;
+
+            // printf(" now: %s\n", asctime(ptm));
+            // printf(" adj: %s\n", asctime(&tm));
+            seconds = mktime(&tm);
+            if (seconds == (time_t)-1) {
+                perish("invalid date");
+            }
+        } else {
             die("invalid %s: %s", required, *arg);
         }
     }

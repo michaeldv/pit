@@ -86,6 +86,28 @@ char *format_time(time_t time)
     return str;
 }
 
+char *inline_replace(char *this, char *old, char *new)
+{
+    char *start = this;
+    char *next = this;
+    int new_length = strlen(new);
+    int old_length = strlen(old);
+
+    if (this && old && new && (old_length > 0) && (old_length >= new_length)) {
+        while (*this) {
+            if (strncmp(this, old, old_length)) {
+                *next++ = *this++;                  /* Not a start of old thising, copy character unchanged. */
+            } else {
+                strncpy(next, new, new_length);     /* Found the old string, replace it with the new one. */
+                next += new_length;                 /* Adjust pointers to move beyond replaced string. */
+                this += old_length;
+            }
+        }
+        *next = '\0';
+    }
+    return start;
+}
+
 #ifdef TEST
 int main(int argc, char *argv[]) {
     printf("your username: %s\n", current_user());
