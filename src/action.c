@@ -18,7 +18,7 @@ static void action_list()
     }
 }
 
-uchar *pit_action(ulong id, char *subject, char *message)
+void pit_action(ulong id, char *subject, char *message)
 {
     static Action action;
 
@@ -29,11 +29,10 @@ uchar *pit_action(ulong id, char *subject, char *message)
     strncpy(action.username, current_user(), sizeof(action.username) - 1);
     strncpy(action.message, message, sizeof(action.message) - 1);
 
-    return pit_table_insert(actions, (uchar *)&action);
+    pit_table_insert(actions, (uchar *)&action);
 }
 
-int pit_log(char *argv[])
+void pit_log(char *argv[])
 {
     action_list();
-    return 1;
 }

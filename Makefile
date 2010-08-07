@@ -17,6 +17,8 @@ SRC = \
 	$(SRCDIR)/action.c \
 	$(SRCDIR)/args.c \
 	$(SRCDIR)/db.c \
+	$(SRCDIR)/help.c \
+	$(SRCDIR)/note.c \
 	$(SRCDIR)/pager.c \
 	$(SRCDIR)/pit.c \
 	$(SRCDIR)/project.c \
@@ -28,6 +30,8 @@ OBJ = \
 	$(OBJDIR)/action.o \
 	$(OBJDIR)/args.o \
 	$(OBJDIR)/db.o \
+	$(OBJDIR)/help.o \
+	$(OBJDIR)/note.o \
 	$(OBJDIR)/pager.o \
 	$(OBJDIR)/pit.o \
 	$(OBJDIR)/project.o \
@@ -54,6 +58,12 @@ $(OBJDIR)/args.o: $(SRCDIR)/args.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/
 
 $(OBJDIR)/db.o: $(SRCDIR)/db.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/db.o -c $(SRCDIR)/db.c
+
+$(OBJDIR)/help.o: $(SRCDIR)/help.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
+	$(CC) -o $(OBJDIR)/help.o -c $(SRCDIR)/help.c
+
+$(OBJDIR)/note.o: $(SRCDIR)/note.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
+	$(CC) -o $(OBJDIR)/note.o -c $(SRCDIR)/note.c
 
 $(OBJDIR)/pager.o: $(SRCDIR)/pager.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/pager.o -c $(SRCDIR)/pager.c

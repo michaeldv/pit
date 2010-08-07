@@ -48,7 +48,7 @@ static void write_header(FILE *file)
     }
 }
 
-int pit_init(char *argv[]) {
+void pit_init(char *argv[]) {
     char **arg = &argv[1];
     char *file_name = pit_file_name();
     int reply = 'Y';
@@ -64,7 +64,6 @@ int pit_init(char *argv[]) {
         pit_db_initialize();
         printf("Created empty %s\n", file_name);
     }
-    return 1;
 }
 
 void pit_db_load() {

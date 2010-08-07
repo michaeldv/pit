@@ -214,7 +214,7 @@ static void task_parse_options(char **arg, char **name, char **status, char **pr
     }
 }
 
-int pit_task(char *argv[])
+void pit_task(char *argv[])
 {
     char **arg = &argv[1];
     char *name = NULL, *status = NULL, *priority = NULL;
@@ -267,5 +267,4 @@ int pit_task(char *argv[])
             }
         }
     }
-    return 1;
 }

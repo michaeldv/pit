@@ -11,13 +11,15 @@ typedef int bool;
 #include "table.h"
 #include "pager.h"
 
-/* #defines */
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
 #ifndef FALSE
 #define FALSE (0)
 #endif
 
 #ifndef TRUE
-#define TRUE  (1)
+#define TRUE (1)
 #endif
 
 #ifndef min
@@ -39,7 +41,20 @@ extern PTable notes;
 extern PTable projects;
 extern PTable tasks;
 
-/* args.c */
+/* Command handlers and database APIs */
+void pit_init(char *argv[]);
+void pit_project(char *argv[]);
+void pit_task(char *argv[]);
+void pit_note(char *argv[]);
+void pit_log(char *argv[]);
+void pit_status(char *argv[]);
+void pit_help(char *argv[]);
+void pit_db_load();
+void pit_db_save();
+void pit_db_initialize();
+void pit_action(ulong id, char *subject, char *message);
+
+/* Argument parsing helpers */
 int    pit_arg_is_option(char **arg);
 int    pit_arg_option(char **arg);
 char  *pit_arg_string(char **arg, char *required);
@@ -47,20 +62,7 @@ ulong  pit_arg_number(char **arg, char *required);
 time_t pit_arg_date(char **arg, char *required);
 time_t pit_arg_time(char **arg, char *required);
 
-/* db.c */
-int  pit_init(char *argv[]);
-void pit_db_load();
-void pit_db_save();
-void pit_db_initialize();
-
-/* log.c project.c task.c user.c */
-int    pit_project(char *argv[]);
-int    pit_task(char *argv[]);
-int    pit_log(char *argv[]);
-char  *pit_current_user();
-uchar *pit_action(ulong id, char *subject, char *message);
-
-/* util.c */
+/* Misc utilities */
 void  die(char *msg, ...);
 void  perish(char *prefix);
 char *mem2str(char *mem, int len);

@@ -9,11 +9,6 @@ PTable tasks;
 PTable notes;
 PTable actions;
 
-static int usage() {
-    printf("usage...\n");
-    return 1;
-}
-
 /*
 ** Suicide.
 */
@@ -42,29 +37,23 @@ void perish(char *prefix)
     exit(0);
 }
 
+void pit_status(char *argv[])
+{
+    puts("pit: status is not implemented yet");
+}
+
 int main(int argc, char *argv[]) {
-    char *commands[] = { "project", "task", "note", "log", "init" };
+    register int i;
+    char *commands[] = { "project", "task", "note", "log", "init", "status", "help" };
+    void (*handlers[])(char *argv[]) = { pit_project, pit_task, pit_note, pit_log, pit_init, pit_status, pit_help };
 
-    /***
-    int i;
-    printf("argc: %d\n", argc);
-    for(i = 0;  i < argc;  i++) {
-        printf("argv[%d]: [%s]\n", i, argv[i]);
-    }
-    ***/
-
-    if (argc > 1) {
-        if (strstr(commands[0], argv[1]) == commands[0]) {
-            return pit_project(&argv[1]);
-        } else if (strstr(commands[1], argv[1]) == commands[1]) {
-            return pit_task(&argv[1]);
-        } else if (strstr(commands[2], argv[1]) == commands[2]) {
-            return 1; /* pit_note(&argv[1]); */
-        } else if (strstr(commands[3], argv[1]) == commands[3]) {
-            return pit_log(&argv[1]);
-        } else if (strstr(commands[4], argv[1]) == commands[4]) {
-            return pit_init(&argv[1]);
+    if (argc == 1) argv[1] = "help";
+    for(i = 0;  i < ARRAY_SIZE(commands);  i++) {
+        if (strstr(commands[i], argv[1]) == commands[i]) {
+            handlers[i](&argv[1]);
+            return 1;
         }
     }
-    return usage();
+    printf("invalid command: %s", argv[1]);
+    return 0;
 }

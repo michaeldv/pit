@@ -96,7 +96,7 @@ static int delete_project(unsigned long number)
     return 1;
 }
 
-int pit_project(char *argv[])
+void pit_project(char *argv[])
 {
     char **arg = &argv[1];
     unsigned long number;
@@ -129,6 +129,4 @@ int pit_project(char *argv[])
             show_project(number);
         }
     }
-
-    return 1;
 }
