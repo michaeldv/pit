@@ -34,8 +34,7 @@ static void project_parse_options(char **arg, char **name, char **status);
 
 static void project_list(char *name, char *status)
 {
-    PProject pp;
-    PPager   ppager;
+    PPager ppager;
 
     pit_db_load();
     if (projects->number_of_records > 0) {
@@ -81,8 +80,6 @@ static void project_show(ulong id)
         printf("%lu: %s (%s, %lu task%s)\n",
             pp->id, pp->name, pp->status, pp->number_of_tasks, (pp->number_of_tasks != 1 ? "s" : ""));
         if (pp->number_of_tasks > 0) {
-            PTask pt = (PTask)tasks->slots;
-
             puts("Tasks:");
             for_each_task(pt) {
                 printf("  %c %lu: %s (%lu notes)\n", (pt->id == tasks->current ? '*' : ' '), pt->id, pt->name, pt->number_of_notes);
@@ -113,13 +110,9 @@ static void project_update(ulong id, char *name, char *status)
 static void project_delete(ulong id)
 {
     PProject pp;
-    PTask pt;
-    char *deleted_name;
-    ulong deleted_number_of_tasks;
 
     pit_db_load();
     project_find_current(&pp, &id);
-
     /*
     ** Delete project tasks.
     */
@@ -135,8 +128,9 @@ static void project_delete(ulong id)
     ** Ready to delete the project itself. But first preserve the
     ** name and number of tasks since we need these bits for logging.
     */
-    deleted_name = str2str(pp->name);
-    deleted_number_of_tasks = pp->number_of_tasks;
+    char *deleted_name = str2str(pp->name);
+    ulong deleted_number_of_tasks = pp->number_of_tasks;
+
     pp = (PProject)pit_table_delete(projects, id);
     if (pp) {
         pit_table_mark(projects, 0); /* TODO: find better current project candidate. */
@@ -149,8 +143,6 @@ static void project_delete(ulong id)
 
 static bool project_already_exist(char *name)
 {
-    PProject pp;
-
     pit_db_load();
     for_each_project(pp) {
         if (!strcmp(pp->name, name)) {

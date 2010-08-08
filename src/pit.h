@@ -30,10 +30,10 @@ typedef int bool;
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
-#define for_each_project(ptr) for (ptr = (PProject)projects->slots; (ptr - (PProject)projects->slots) < projects->number_of_records; ptr++)
-#define for_each_task(ptr)    for (ptr = (PTask)tasks->slots; (ptr - (PTask)tasks->slots) < tasks->number_of_records; ptr++)
-#define for_each_note(ptr)    for (ptr = (PNote)notes->slots; (ptr - (PNote)notes->slots) < notes->number_of_records; ptr++)
-#define for_each_action(ptr)  for (ptr = (PAction)actions->slots; (ptr - (PAction)actions->slots) < actions->number_of_records; ptr++)
+#define for_each_project(ptr) PProject ptr; for (ptr = (PProject)projects->slots; (ptr - (PProject)projects->slots) < projects->number_of_records; ptr++)
+#define for_each_task(ptr)    PTask ptr;    for (ptr = (PTask)tasks->slots;       (ptr - (PTask)tasks->slots)       < tasks->number_of_records;    ptr++)
+#define for_each_note(ptr)    PNote ptr;    for (ptr = (PNote)notes->slots;       (ptr - (PNote)notes->slots)       < notes->number_of_records;    ptr++)
+#define for_each_action(ptr)  PAction ptr;  for (ptr = (PAction)actions->slots;   (ptr - (PAction)actions->slots)   < actions->number_of_records;  ptr++)
 
 /* Externals. */
 extern PTable actions;

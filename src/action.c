@@ -5,7 +5,6 @@
 
 static void action_list()
 {
-    PAction pa;
     PPager ppager;
 
     pit_db_load();

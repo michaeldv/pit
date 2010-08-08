@@ -32,14 +32,11 @@ static void task_parse_options(char **arg, char **name, char **status, char **pr
 
 static void task_list(char *name, char *status, char *priority, time_t date, time_t time)
 {
-    PProject pp;
-    PTask    pt;
-    PPager   ppager;
-
     pit_db_load();
     if (tasks->number_of_records > 0) {
-        pp = (PProject)pit_table_current(projects);
-        ppager = pit_pager_initialize(PAGER_TASK, tasks->number_of_records);
+        PProject pp = (PProject)pit_table_current(projects);
+        PPager ppager = pit_pager_initialize(PAGER_TASK, tasks->number_of_records);
+
         for_each_task(pt) {
             if (pp && pt->project_id != pp->id) {
                 continue;
@@ -114,18 +111,15 @@ void pit_task_delete(ulong id, PProject pp)
     PTask pt;
     bool standalone = (pp == NULL);
 
-    if (standalone) {
-        pit_db_load();
-        pp = (PProject)pit_table_find(projects, pt->project_id);
-    }
+    if (standalone) pit_db_load();
     task_find_current(&pt, &id);
+    if (standalone) pp = (PProject)pit_table_find(projects, pt->project_id);
 
     if (pp) {
         /*
         ** First delete task notes if any.
         */
         if (pt->number_of_notes > 0) {
-            PNote pn;
             for_each_note(pn) {
                 if (pn->task_id == id) {
                     pit_note_delete(pn->id, pt);
