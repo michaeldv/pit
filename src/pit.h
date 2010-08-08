@@ -53,6 +53,9 @@ void pit_db_load();
 void pit_db_save();
 void pit_db_initialize();
 void pit_action(ulong id, char *subject, char *message);
+void pit_task_delete(ulong id, PProject pp);
+void pit_note_delete(ulong id, PTask pt);
+
 
 /* Argument parsing helpers */
 int    pit_arg_is_option(char **arg);
@@ -65,6 +68,7 @@ time_t pit_arg_time(char **arg, char *required);
 /* Misc utilities */
 void  die(char *msg, ...);
 void  perish(char *prefix);
+char *str2str(char *str);
 char *mem2str(char *mem, int len);
 char *current_user();
 char *home_dir(char *username, int len);

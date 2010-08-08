@@ -3,20 +3,36 @@
 #include <stdio.h>
 #include "pit.h"
 
-static int already_exist(char *name)
-{
-    PProject pp;
+static void project_list(char *name, char *status);
+static void project_show(ulong id);
+static void project_create(char *name, char *status);
+static void project_update(ulong id, char *name, char *status);
+static void project_delete(ulong id);
+static bool project_already_exist(char *name);
+static void project_find_current(PProject *ppp, ulong *pid);
+static void project_log_create(PProject pp, char *name, char *status);
+static void project_log_update(PProject pp, char *name, char *status);
+static void project_log_delete(ulong id, char *name, ulong number_of_tasks);
+static void project_parse_options(char **arg, char **name, char **status);
 
-    pit_db_load();
-    for_each_project(pp) {
-        if (!strcmp(pp->name, name)) {
-            return 1;
-        }
-    }
-    return 0;
-}
+/*
+** CREATING PROJECTS:
+**   pit project -c name [-s status]
+**
+** EDITING PROJECTS:
+**   pit project -e [number] [-n name] [-s status]
+**
+** DELETING PROJECTS:
+**   pit project -d [number]
+**
+** VIEWING PROJECT:
+**   pit project [[-q] number]
+**
+** LISTING PROJECTS:
+**   pit project -q [number | [-n name] [-s status]]
+*/
 
-static void list_projects()
+static void project_list(char *name, char *status)
 {
     PProject pp;
     PPager   ppager;
@@ -31,11 +47,11 @@ static void list_projects()
     }
 }
 
-static void create_project(char *name, char *status)
+static void project_create(char *name, char *status)
 {
     pit_db_load();
 
-    if (already_exist(name)) {
+    if (project_already_exist(name)) {
         die("project with the same name already exists");
     } else {
         Project p, *pp;
@@ -55,12 +71,12 @@ static void create_project(char *name, char *status)
     }
 }
 
-static int show_project(ulong number)
+static void project_show(ulong id)
 {
     PProject pp;
 
     pit_db_load();
-    pp = (PProject)pit_table_find(projects, number);
+    pp = (PProject)pit_table_find(projects, id);
     if (pp) {
         printf("%lu: %s (%s, %lu task%s)\n",
             pp->id, pp->name, pp->status, pp->number_of_tasks, (pp->number_of_tasks != 1 ? "s" : ""));
@@ -77,56 +93,192 @@ static int show_project(ulong number)
     } else {
         die("could not find the project");
     }
-    return 1;
 }
 
-static int delete_project(unsigned long number)
+static void project_update(ulong id, char *name, char *status)
 {
     PProject pp;
 
-    printf("deleting project %lu\n", number);
     pit_db_load();
-    pp = (PProject)pit_table_delete(projects, number);
+    project_find_current(&pp, &id);
+
+    if (name) strncpy(pp->name, name, sizeof(pp->name) - 1);
+    if (status) strncpy(pp->status, status, sizeof(pp->status) - 1);
+    pit_table_mark(projects, pp->id);
+
+    project_log_update(pp, name, status);
+    pit_db_save();
+}
+
+static void project_delete(ulong id)
+{
+    PProject pp;
+    PTask pt;
+    char *deleted_name;
+    ulong deleted_number_of_tasks;
+
+    pit_db_load();
+    project_find_current(&pp, &id);
+
+    /*
+    ** Delete project tasks.
+    */
+    if (pp->number_of_tasks > 0) {
+        for_each_task(pt) {
+            if (pt->project_id == id) {
+                pit_task_delete(pt->id, pp);
+                --pt; /* Make the task pointer stay since it now points to the next task. */
+            }
+        }
+    }
+    /*
+    ** Ready to delete the project itself. But first preserve the
+    ** name and number of tasks since we need these bits for logging.
+    */
+    deleted_name = str2str(pp->name);
+    deleted_number_of_tasks = pp->number_of_tasks;
+    pp = (PProject)pit_table_delete(projects, id);
     if (pp) {
-        pit_table_mark(projects, 0);
+        pit_table_mark(projects, 0); /* TODO: find better current project candidate. */
+        project_log_delete(id, deleted_name, deleted_number_of_tasks);
         pit_db_save();
     } else {
         die("could not delete the project");
     }
-    return 1;
+}
+
+static bool project_already_exist(char *name)
+{
+    PProject pp;
+
+    pit_db_load();
+    for_each_project(pp) {
+        if (!strcmp(pp->name, name)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static void project_find_current(PProject *ppp, ulong *pid)
+{
+    if (*pid) {
+        *ppp = (PProject)pit_table_find(projects, *pid);
+        if (!*ppp) die("could not find project %lu", *pid);
+    } else {
+        *ppp = (PProject)pit_table_current(projects);
+        if (!*ppp) die("could not find current project");
+        else *pid = (*(PProject *)ppp)->id;
+    }
+}
+
+static void project_log_create(PProject pp, char *name, char *status)
+{
+    char str[256];
+
+    sprintf(str, "created project %lu: %s (status: %s)", pp->id, name, status);
+    puts(str);
+    pit_action(pp->id, "project", str);
+}
+
+static void project_log_update(PProject pp, char *name, char *status)
+{
+    char str[256];
+    bool empty = TRUE;
+
+    sprintf(str, "updated project %lu:", pp->id);
+    if (name) {
+        sprintf(str + strlen(str), " (name: %s", name);
+        empty = FALSE;
+    } else {
+        sprintf(str + strlen(str), " %s (", pp->name);
+    }
+    if (status) {
+        sprintf(str + strlen(str), "%sstatus: %s)", (empty ? "" : ", "), status);
+    }
+    puts(str);
+    pit_action(pp->id, "project", str);
+}
+
+static void project_log_delete(ulong id, char *name, ulong number_of_tasks)
+{
+    char str[256];
+    
+    sprintf(str, "deleted project %lu: %s", id, name);
+    if (number_of_tasks > 0) {
+        sprintf(str + strlen(str), " with %lu task%s", number_of_tasks, (number_of_tasks == 1 ? "" : "s"));
+    }
+    puts(str);
+    pit_action(id, "project", str);
+}
+
+static void project_parse_options(char **arg, char **name, char **status)
+{
+    while(*++arg) {
+        switch(pit_arg_option(arg)) {
+        case 's':
+            *status = pit_arg_string(++arg, "project status");
+            break;
+        case 'n':
+            if (name) {
+                *name = pit_arg_string(++arg, "project name");
+                break;
+            } /* else fall though */
+        default:
+            die("invalid project option: %s", *arg);
+        }
+    }
 }
 
 void pit_project(char *argv[])
 {
     char **arg = &argv[1];
-    unsigned long number;
+    char *name = NULL, *status = NULL;
+    ulong number = 0L;
 
     if (!*arg) {
-        list_projects();
-    } else if (!strcmp(*arg, "-c")) {
-        if (!*++arg) {
-            die("missing project name");
+        project_list(name, status); /* Show all projects. */
+    } else { /* pit project [number] */
+        number = pit_arg_number(arg, NULL);
+        if (number) {
+            project_show(number);
         } else {
-            create_project(*arg, *(arg + 1));
-        }
-    } else if (!strcmp(*arg, "-d")) {
-        if (!*++arg) {
-            die("missing project number");
-        } else {
-            number = atoi(*arg);
-            if (!number) {
-                die("invalid project number");
-            } else {
-                delete_project(number);
+            switch(pit_arg_option(arg)) {
+            case 'c': /* pit project -c name [-s status] */
+                name = pit_arg_string(++arg, "project name");
+                project_parse_options(arg, NULL, &status);
+                project_create(name, status);
+                break;
+            case 'e': /* pit project -e [number] [-n name] [-s status] */
+                number = pit_arg_number(++arg, NULL);
+                if (!number) --arg;
+                project_parse_options(arg, &name, &status);
+                if (!name && !status) {
+                    die("nothing to update");
+                } else {
+                    project_update(number, name, status);
+                }
+                break;
+            case 'd': /* pit project -d [number] */
+                number = pit_arg_number(++arg, NULL);
+                project_delete(number);
+                break;
+            case 'q': /* pit project -q [number | [-n name] [-s status]] */
+                number = pit_arg_number(++arg, NULL);
+                if (number) {
+                    project_show(number);
+                } else {
+                    project_parse_options(--arg, &name, &status);
+                    if (!name && !status) {
+                        project_show(0); /* Show current project if any. */
+                    } else {
+                        project_list(name, status);
+                    }
+                }
+                break;
+            default:
+                die("invalid project option: %s", *arg);
             }
-        }
- /* } else if (!strcmp(*arg, "-e")) { TODO: Edit */
-    } else {
-        number = atoi(*arg);
-        if (!number) {
-            die("invalid project parameters");
-        } else {
-            show_project(number);
         }
     }
 }

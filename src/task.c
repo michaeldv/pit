@@ -4,13 +4,13 @@
 #include "pit.h"
 
 static void task_list(char *name, char *status, char *priority, time_t date, time_t time);
-static void task_show(ulong number);
+static void task_show(ulong id);
 static void task_create(char *name, char *status, char *priority, time_t date, time_t time);
-static void task_update(ulong number, char *name, char *status, char *priority, time_t date, time_t time);
-static void task_delete(ulong number);
+static void task_update(ulong id, char *name, char *status, char *priority, time_t date, time_t time);
+static void task_find_current(PTask *ppt, ulong *pid);
 static void task_log_create(PTask pt, char *name, char *status, char *priority, time_t date, time_t time);
 static void task_log_update(PTask pt, char *name, char *status, char *priority, time_t date, time_t time);
-static void task_log_delete(PTask pt);
+static void task_log_delete(ulong id, char *name, ulong number_of_notes);
 static void task_parse_options(char **arg, char **name, char **status, char **priority, time_t *date, time_t *time);
 
 /*
@@ -27,7 +27,7 @@ static void task_parse_options(char **arg, char **name, char **status, char **pr
 **   pit task [[-q] number]
 **
 ** LISTING TASKS:
-**   pit task -q [-s status] [-p priority] [-d date] [-t time]
+**   pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-t time]]
 */
 
 static void task_list(char *name, char *status, char *priority, time_t date, time_t time)
@@ -50,9 +50,9 @@ static void task_list(char *name, char *status, char *priority, time_t date, tim
     }
 }
 
-static void task_show(ulong number)
+static void task_show(ulong id)
 {
-    printf("task_show(%lu)\n", number);
+    printf("task_show(%lu)\n", id);
 }
 
 static void task_create(char *name, char *status, char *priority, time_t date, time_t time)
@@ -87,18 +87,13 @@ static void task_create(char *name, char *status, char *priority, time_t date, t
     }
 }
 
-static void task_update(ulong number, char *name, char *status, char *priority, time_t date, time_t time)
+static void task_update(ulong id, char *name, char *status, char *priority, time_t date, time_t time)
 {
     PTask pt;
 
     pit_db_load();
-    if (number) {
-        pt = (PTask)pit_table_find(tasks, number);
-        if (!pt) die("could not find task %lu", number);
-    } else {
-        pt = (PTask)pit_table_current(tasks);
-        if (!pt) die("could not find current task");
-    }
+    task_find_current(&pt, &id);
+
     if (name) strncpy(pt->name, name, sizeof(pt->name) - 1);
     if (status) strncpy(pt->status, status, sizeof(pt->status) - 1);
     if (priority) strncpy(pt->priority, priority, sizeof(pt->priority) - 1);
@@ -110,26 +105,68 @@ static void task_update(ulong number, char *name, char *status, char *priority, 
     pit_db_save();
 }
 
-static void task_delete(ulong number)
+/*
+** A task could be deleted as standalone entity or as part of cascading project
+** delete. In later case we're going to have 'pp' set and the database loaded.
+*/
+void pit_task_delete(ulong id, PProject pp)
 {
     PTask pt;
-    PNote pn;
+    bool standalone = (pp == NULL);
 
-    pit_db_load();
-    pt = (PTask)pit_table_delete(tasks, number);
-    if (pt) {
-        pit_table_mark(tasks, 0);
+    if (standalone) {
+        pit_db_load();
+        pp = (PProject)pit_table_find(projects, pt->project_id);
+    }
+    task_find_current(&pt, &id);
+
+    if (pp) {
+        /*
+        ** First delete task notes if any.
+        */
         if (pt->number_of_notes > 0) {
+            PNote pn;
             for_each_note(pn) {
-                if (pn->task_id == pt->id) {
-                    pit_table_delete(notes, pn->id);
+                if (pn->task_id == id) {
+                    pit_note_delete(pn->id, pt);
+                    --pn; /* Make the note pointer stay since it now points to the next note. */
                 }
             }
         }
-        task_log_delete(pt);
-        pit_db_save();
+        /*
+        ** Preserve task name and number_of_notes before deleting the task since
+        ** we need these for logging.
+        */
+        char *deleted_name = str2str(pt->name);
+        ulong deleted_number_of_notes = pt->number_of_notes;
+
+        pt = (PTask)pit_table_delete(tasks, id);
+        if (pt) {
+            pit_table_mark(tasks, 0); /* TODO: find better current task candidate.  */
+            task_log_delete(id, deleted_name, deleted_number_of_notes);
+            if (standalone) {
+                pp->number_of_tasks--;
+                pit_db_save();
+            }
+            free(deleted_name);
+        } else {
+            free(deleted_name);
+            die("could not delete task %lu", id);
+        }
     } else {
-        die("could not delete task %lu", number);
+        die("could not find project for task %lu", id);
+    }
+}
+
+static void task_find_current(PTask *ppt, ulong *pid)
+{
+    if (*pid) {
+        *ppt = (PTask)pit_table_find(tasks, *pid);
+        if (!*ppt) die("could not find task %lu", *pid);
+    } else {
+        *ppt = (PTask)pit_table_current(tasks);
+        if (!*ppt) die("could not find current task");
+        else *pid = (*(PTask *)ppt)->id;
     }
 }
 
@@ -175,16 +212,16 @@ static void task_log_update(PTask pt, char *name, char *status, char *priority, 
     pit_action(pt->id, "task", str);
 }
 
-static void task_log_delete(PTask pt)
+static void task_log_delete(ulong id, char *name, ulong number_of_notes)
 {
     char str[256];
     
-    sprintf(str, "deleted task %lu: %s", pt->id, pt->name);
-    if (pt->number_of_notes > 0) {
-        sprintf(str + strlen(str), " with %lu note%s", pt->number_of_notes, (pt->number_of_notes == 1 ? "" : "s"));
+    sprintf(str, "deleted task %lu: %s", id, name);
+    if (number_of_notes > 0) {
+        sprintf(str + strlen(str), " with %lu note%s", number_of_notes, (number_of_notes == 1 ? "" : "s"));
     }
     puts(str);
-    pit_action(pt->id, "task", str);
+    pit_action(id, "task", str);
 }
 
 static void task_parse_options(char **arg, char **name, char **status, char **priority, time_t *date, time_t *time)
@@ -223,7 +260,7 @@ void pit_task(char *argv[])
     ulong number = 0L;
 
     if (!*arg) {
-        task_list(NULL, NULL, NULL, 0, 0); /* List all tasks (with default paramaters). */
+        task_list(name, status, priority, date, time); /* List all tasks (i.e. use default paramaters). */
     } else { /* pit task [number] */
         number = pit_arg_number(arg, NULL);
         if (number) {
@@ -235,7 +272,7 @@ void pit_task(char *argv[])
                 task_parse_options(arg, NULL, &status, &priority, &date, &time);
                 task_create(name, status, priority, date, time);
                 break;
-            case 'e': /* pit task -e [number] [-n name] [-s status] [-p priority] [-d date] [-t time]*/
+            case 'e': /* pit task -e [number] [-n name] [-s status] [-p priority] [-d date] [-t time] */
                 number = pit_arg_number(++arg, NULL);
                 if (!number) --arg;
                 task_parse_options(arg, &name, &status, &priority, &date, &time);
@@ -247,7 +284,7 @@ void pit_task(char *argv[])
                 break;
             case 'd': /* pit task -d [number] */
                 number = pit_arg_number(++arg, NULL);
-                task_delete(number);
+                pit_task_delete(number, NULL); /* Delete the task, but keep its project. */
                 break;
             case 'q': /* pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-t time]] */
                 number = pit_arg_number(++arg, NULL);
@@ -256,7 +293,7 @@ void pit_task(char *argv[])
                 } else {
                     task_parse_options(--arg, &name, &status, &priority, &date, &time);
                     if (!name && !status && !priority && !date && !time) {
-                        task_show(0);
+                        task_show(0); /* Show current task if any. */
                     } else {
                         task_list(name, status, priority, date, time);
                     }

@@ -6,6 +6,10 @@
 #include <sys/types.h>
 #include "pit.h"
 
+char *str2str(char *str) {
+    return strcpy(malloc(strlen(str) + 1), str); /* Cheap strdup() */
+}
+
 char *mem2str(char *mem, int len) {
     char *str = malloc(len + 1);
     memcpy(str, mem, len);

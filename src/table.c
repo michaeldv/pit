@@ -107,7 +107,7 @@ uchar *pit_table_find(PTable pt, ulong id) {
 ** if the record was not found.
 */
 uchar *pit_table_delete(PTable pt, ulong id) {
-    // TODO: retrn NULL (or raise?) if table doesn't have id.
+    // TODO: return NULL (or die?) if table doesn't have id.
     register uchar *pr = (uchar *)pit_table_find(pt, id);
 
     if (pr) {
