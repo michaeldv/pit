@@ -248,14 +248,16 @@ PTable pit_table_load(FILE *file) {
     pt->slots = pr = calloc(pt->number_of_slots, pt->record_size);
     pt->index = pi = calloc(pt->number_of_slots, sizeof(uchar *));
     /*
-    ** Now read the records into the slots and rebuild the index.
+    ** Now read the records into the slots and rebuild the index if the
+    ** table has primary key.
     */
     read += fread(pt->slots, pt->record_size, pt->number_of_records, file);
-    for(i = 1;  i <= pt->number_of_slots;  i++, pi++) {
-        // TODO: if table doesn't have id || has id && id matches...
-        if ((ulong)*pr == i) {
-            *pi = pr;
-            pr += pt->record_size;
+    if (pt->flags & TABLE_HAS_ID) {
+        for(i = 1;  i <= pt->number_of_slots;  i++, pi++) {
+            if ((ulong)*pr == i) {
+                *pi = pr;
+                pr += pt->record_size;
+            }
         }
     }
     return pt;
