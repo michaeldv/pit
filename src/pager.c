@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include "pit.h"
 
-#define for_each_entry(ppager, entry) for (entry = (uchar **)ppager->entries; (uchar *)*entry; entry++)
+#define for_each_entry(ppager, entry) for (entry = (char **)ppager->entries; (char *)*entry; entry++)
 #define TASK(attr)    (((PTask)*pentry)->attr)
 #define PROJECT(attr) (((PProject)*pentry)->attr)
 #define ACTION(attr)  (((PAction)*pentry)->attr)
 
 static void print_actions(PPager ppager)
 {
-    uchar **pentry;
+    char **pentry;
     char format[64];
 
     sprintf(format, "%%s (%%-%ds): %%s\n", ppager->max.action.username);
@@ -21,10 +21,10 @@ static void print_actions(PPager ppager)
 
 static void print_projects(PPager ppager)
 {
-    uchar **pentry;
+    char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dlu: (%%-%ds) [%%-%ds] %%-%ds (%%lu task%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] %%-%ds (%%d task%%s)\n",
         ppager->max.project.id, ppager->max.project.username, ppager->max.project.status, ppager->max.project.name
     );
     for_each_entry(ppager, pentry) {
@@ -42,10 +42,10 @@ static void print_projects(PPager ppager)
 
 static void print_tasks(PPager ppager)
 {
-    uchar **pentry;
+    char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dlu: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds  (%%lu note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds  (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -64,10 +64,10 @@ static void print_tasks(PPager ppager)
 
 static void print_tasks_with_date(PPager ppager)
 {
-    uchar **pentry;
+    char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dlu: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%-%ds  (%%lu note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%-%ds  (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.date, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -87,10 +87,10 @@ static void print_tasks_with_date(PPager ppager)
 
 static void print_tasks_with_time(PPager ppager)
 {
-    uchar **pentry;
+    char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dlu: (%%-%ds)  %%-%ds  %%-%ds  %%%ds  %%-%ds  (%%lu note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds)  %%-%ds  %%-%ds  %%%ds  %%-%ds  (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.time, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -110,10 +110,10 @@ static void print_tasks_with_time(PPager ppager)
 
 static void print_tasks_with_date_and_time(PPager ppager)
 {
-    uchar **pentry;
+    char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dlu: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%%ds %%-%ds  (%%lu note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%%ds %%-%ds  (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.date, ppager->max.task.time, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -132,28 +132,28 @@ static void print_tasks_with_date_and_time(PPager ppager)
     }
 }
 
-PPager pit_pager_initialize(ulong type, ulong number_of_entries)
+PPager pit_pager_initialize(int type, int number_of_entries)
 {
     PPager ppager = calloc(1, sizeof(Pager));
 
     memset(ppager, 0, sizeof(Pager));
     ppager->type = type;
-    ppager->entries = calloc(number_of_entries + 1, sizeof(uchar *));
+    ppager->entries = calloc(number_of_entries + 1, sizeof(char *));
 
     return ppager;
 }
 
-void pit_pager_print(PPager ppager, uchar *entry)
+void pit_pager_print(PPager ppager, char *entry)
 {
     char str[32];
 
-    uchar **pentry = (uchar **)ppager->entries + ppager->number_of_entries++;
+    char **pentry = (char **)ppager->entries + ppager->number_of_entries++;
     *pentry = entry;
 
     for_each_entry(ppager, pentry) {
         switch(ppager->type) {
         case PAGER_TASK:
-            sprintf(str, "%lu", TASK(id));
+            sprintf(str, "%d", TASK(id));
             ppager->max.task.id = max(ppager->max.task.id, strlen(str));
             ppager->max.task.username = max(ppager->max.task.username, strlen(TASK(username)));
             ppager->max.task.name = max(ppager->max.task.name, strlen(TASK(name)));
@@ -167,7 +167,7 @@ void pit_pager_print(PPager ppager, uchar *entry)
             }
             break;
         case PAGER_PROJECT:
-            sprintf(str, "%lu", ((PProject)*pentry)->id);
+            sprintf(str, "%d", ((PProject)*pentry)->id);
             ppager->max.project.id = max(ppager->max.project.id, strlen(str));
             ppager->max.project.username = max(ppager->max.project.username, strlen(((PProject)*pentry)->username));
             ppager->max.project.name = max(ppager->max.project.name, strlen(((PProject)*pentry)->name));
@@ -220,3 +220,7 @@ void pit_pager_free(PPager ppager)
     free(ppager->entries);
     free(ppager);
 }
+
+#undef TASK
+#undef PROJECT
+#undef ACTION

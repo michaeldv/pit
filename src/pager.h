@@ -7,9 +7,9 @@
 #define PAGER_NOTE    8
 
 typedef struct _Pager {
-    ulong   type;
-    ulong   number_of_entries;
-    uchar   *entries;
+    int   type;
+    int   number_of_entries;
+    char *entries;
     union {
         struct {
             int id;
@@ -33,8 +33,8 @@ typedef struct _Pager {
     } max;
 } Pager, *PPager;
 
-PPager pit_pager_initialize(ulong type, ulong number_of_entries);
-void   pit_pager_print(PPager ppager, uchar *entry);
+PPager pit_pager_initialize(int type, int number_of_entries);
+void   pit_pager_print(PPager ppager, char *entry);
 void   pit_pager_flush(PPager ppager);
 void   pit_pager_free(PPager ppager);
 

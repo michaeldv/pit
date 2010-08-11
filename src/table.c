@@ -7,7 +7,7 @@
 /*
 ** Initialize the table by alloocating necessary memory chunks.
 */
-PTable pit_table_initialize(ulong record_size, ulong flags) {
+PTable pit_table_initialize(int record_size, int flags) {
     PTable pt = calloc(1, sizeof(Table));
 
     pt->flags             = flags;
@@ -17,7 +17,7 @@ PTable pit_table_initialize(ulong record_size, ulong flags) {
     pt->auto_increment    = 0;
     pt->current           = 0;
     pt->slots             = calloc(TABLE_INCREMENT, pt->record_size);
-    pt->index             = calloc(TABLE_INCREMENT, sizeof(uchar *));
+    pt->index             = calloc(TABLE_INCREMENT, sizeof(char *));
 
     return pt;
 }
@@ -25,14 +25,14 @@ PTable pit_table_initialize(ulong record_size, ulong flags) {
 /*
 ** Return the address of next avaiable slot within pt->slots chunk.
 */
-static uchar *table_available_slot(PTable pt) {
+static char *table_available_slot(PTable pt) {
     return pt->slots + pt->number_of_records * pt->record_size;
 }
 
 /*
 ** Return the address of last stored record.
 */
-static uchar *table_last_record(PTable pt) {
+static char *table_last_record(PTable pt) {
     if (pt->number_of_records == 0) {
         return pt->slots;
     } else {
@@ -43,14 +43,14 @@ static uchar *table_last_record(PTable pt) {
 /*
 ** Return the address of next available pointer within pt->index chunk.
 */
-static uchar **table_available_index(PTable pt) {
+static char **table_available_index(PTable pt) {
     return pt->index + pt->auto_increment;
 }
 
 /*
 ** Return the address of last pointer within pt->index chunk.
 */
-static uchar **table_last_index(PTable pt) {
+static char **table_last_index(PTable pt) {
     if (pt->auto_increment == 0) {
         return pt->index;
     } else {
@@ -65,8 +65,8 @@ static uchar **table_last_index(PTable pt) {
 ** existing indices to make them point to reallocated record slots.
 */
 static PTable table_extend(PTable pt) {
-    register ulong i;
-    register uchar **pi;
+    register int i;
+    register char **pi;
 
     pt->number_of_slots += TABLE_INCREMENT;
     /*
@@ -93,7 +93,7 @@ static PTable table_extend(PTable pt) {
 /*
 ** Find a record by id and return its address.
 */
-uchar *pit_table_find(PTable pt, ulong id) {
+char *pit_table_find(PTable pt, int id) {
     // TODO: retrn NULL (or raise?) if table doesn't have id.
     if (pt->number_of_records == 0 || id <= 0 || id > pt->auto_increment) {
         return NULL;
@@ -106,14 +106,14 @@ uchar *pit_table_find(PTable pt, ulong id) {
 ** Delete a record by its ID. Return the address of deleted record or NULL
 ** if the record was not found.
 */
-uchar *pit_table_delete(PTable pt, ulong id) {
+char *pit_table_delete(PTable pt, int id) {
     // TODO: return NULL (or die?) if table doesn't have id.
-    register uchar *pr = (uchar *)pit_table_find(pt, id);
+    register char *pr = (char *)pit_table_find(pt, id);
 
     if (pr) {
-        register ulong i;
-        register uchar **pi;
-        register uchar *last = table_last_record(pt);
+        register int i;
+        register char **pi;
+        register char *last = table_last_record(pt);
         /*
         ** Overwrite current record by shifting over remaining records
         */
@@ -144,8 +144,8 @@ uchar *pit_table_delete(PTable pt, ulong id) {
 ** Insert a record and return its address. The table gets extended
 ** as necessary.
 */
-uchar *pit_table_insert(PTable pt, uchar *record) {
-    register uchar **pi;
+char *pit_table_insert(PTable pt, char *record) {
+    register char **pi;
     register time_t now;
 
     if (pt->number_of_records >= pt->number_of_slots) {
@@ -163,7 +163,7 @@ uchar *pit_table_insert(PTable pt, uchar *record) {
     ** record field of type "unsigned long".
     */
     if (pt->flags & TABLE_HAS_ID) {
-        *(ulong *)*pi = pt->auto_increment;
+        *(int *)*pi = pt->auto_increment;
     }
     /*
     ** Update created_at and/or updated_at which must be last one or two record
@@ -182,14 +182,14 @@ uchar *pit_table_insert(PTable pt, uchar *record) {
 /*
 ** Find current record.
 */
-uchar *pit_table_current(PTable pt) {
+char *pit_table_current(PTable pt) {
     return pit_table_find(pt, pt->current);
 }
 
 /*
 ** Set current record as indicated by the id, then find and return it.
 */
-uchar *pit_table_mark(PTable pt, ulong id) {
+char *pit_table_mark(PTable pt, int id) {
     return pit_table_find(pt, pt->current = id);
 }
 
@@ -218,7 +218,7 @@ int pit_table_save(FILE *file, PTable pt) {
     ** Save table header data: flags, record_size, number_of_slots,
     ** number_of_records, and auto_increment, current.
     */
-    written += fwrite(pt, sizeof(ulong), 6, file);
+    written += fwrite(pt, sizeof(int), 6, file);
     /*
     ** Save the records. Note that we save the actual (not allocated) data.
     */
@@ -233,20 +233,20 @@ int pit_table_save(FILE *file, PTable pt) {
 PTable pit_table_load(FILE *file) {
     PTable pt;
     register int read = 0;
-    register ulong i;
-    uchar *pr, **pi;
+    register int i;
+    char *pr, **pi;
     
     pt = calloc(1, sizeof(Table));
     /*
     ** First read the header.
     */
-    read += fread(pt, sizeof(ulong), 6, file);
+    read += fread(pt, sizeof(int), 6, file);
     /*
     ** Now allocate slots and index based on the original number of slots.
     */
-    /*** printf("Allocating %lu slots\n", pt->number_of_slots); ***/
+    /*** printf("Allocating %d slots\n", pt->number_of_slots); ***/
     pt->slots = pr = calloc(pt->number_of_slots, pt->record_size);
-    pt->index = pi = calloc(pt->number_of_slots, sizeof(uchar *));
+    pt->index = pi = calloc(pt->number_of_slots, sizeof(char *));
     /*
     ** Now read the records into the slots and rebuild the index if the
     ** table has primary key.
@@ -254,7 +254,7 @@ PTable pit_table_load(FILE *file) {
     read += fread(pt->slots, pt->record_size, pt->number_of_records, file);
     if (pt->flags & TABLE_HAS_ID) {
         for(i = 1;  i <= pt->number_of_slots;  i++, pi++) {
-            if ((ulong)*pr == i) {
+            if ((int)*pr == i) {
                 *pi = pr;
                 pr += pt->record_size;
             }
@@ -267,8 +267,8 @@ PTable pit_table_load(FILE *file) {
 #if defined(TEST)
 
 typedef struct {
-    ulong id;
-    ulong value;
+    int id;
+    int value;
     char name[30];
     time_t created_at;
     time_t updated_at;
@@ -276,8 +276,8 @@ typedef struct {
 
 void dump(Record *prec) {
     if (prec) {
-        printf("(%08lX) id: %08lu, value: %lu, created_at: %lu, updated_at: %lu\n", 
-        (ulong)prec, prec->id, prec->value, prec->created_at, prec->updated_at);
+        printf("(%08lX) id: %08d, value: %d, created_at: %d, updated_at: %d\n", 
+        (int)prec, prec->id, prec->value, prec->created_at, prec->updated_at);
     } else {
         printf("(NULL)\n");
     }
@@ -301,7 +301,7 @@ int main() {
     PTable pt;
 
     Record rec, *prec;
-    ulong i, total = 3;
+    int i, total = 3;
 
     pt = pit_table_initialize(sizeof(Record), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
     for(i = 0;  i < total;  i++) {
@@ -310,20 +310,20 @@ int main() {
         strcpy(rec.name, "test");
         rec.created_at = rec.updated_at = (time_t)0;
 
-        prec = (Record *)pit_table_insert(pt, (uchar *)&rec);
+        prec = (Record *)pit_table_insert(pt, (char *)&rec);
         dump(prec);
     }
     prec = (Record *)pit_table_find(pt, total - 1);
     pit_table_mark(pt, prec->id);
-    printf("current: %lu\n", pt->current);
+    printf("current: %d\n", pt->current);
 
     // for (i = 20;  i < total;  i++) {
-    //     printf("Deleting %lu\n", i + 1);
+    //     printf("Deleting %d\n", i + 1);
     //     prec = (Record *)pit_table_delete(pt, i + 1);
     // }
-    printf("Deleting %lu\n", 1L);
+    printf("Deleting %d\n", 1L);
     prec = (Record *)pit_table_delete(pt, 1);
-    printf("current: %lu\n", pt->current);
+    printf("current: %d\n", pt->current);
     dump_all(pt);
 
     FILE *file = fopen("/tmp/.pit", "w");
@@ -333,7 +333,7 @@ int main() {
     file = fopen("/tmp/.pit", "r");
     pt = pit_table_load(file);
     dump_all(pt);
-    printf("current: %lu\n", pt->current);
+    printf("current: %d\n", pt->current);
     fclose(file);
 
     pit_table_free(pt);

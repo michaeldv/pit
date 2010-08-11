@@ -18,6 +18,15 @@ char *mem2str(char *mem, int len) {
     return str;
 }
 
+bool zero(char *mem, int len) {
+    char *pch = mem;
+
+    while(pch - mem < len) {
+        if (*pch++) return FALSE;
+    }
+    return TRUE;
+}
+
 char *current_user() {
     static char *username = NULL;
 

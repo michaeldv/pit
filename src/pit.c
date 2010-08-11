@@ -4,10 +4,19 @@
 #include <stdio.h>
 #include "pit.h"
 
-PTable projects;
-PTable tasks;
-PTable notes;
-PTable actions;
+PHeader header;
+PTable  projects;
+PTable  tasks;
+PTable  notes;
+PTable  actions;
+
+void free_externals() {
+    if (header)   free(header);
+    if (actions)  pit_table_free(actions);
+    if (notes)    pit_table_free(notes);
+    if (projects) pit_table_free(projects);
+    if (tasks)    pit_table_free(tasks);
+}
 
 /*
 ** Suicide.
@@ -17,11 +26,14 @@ void die(char *message, ...)
     char str[4096];
     va_list params;
 
-    va_start(params, message);
-      vsnprintf(str, sizeof(str), message, params);
-      fprintf(stderr, "pit: %s\n", str);
-    va_end(params);
+    if (message) {
+        va_start(params, message);
+          vsnprintf(str, sizeof(str), message, params);
+          fprintf(stderr, "pit: %s\n", str);
+        va_end(params);
+    }
 
+    free_externals();
     exit(0);
 }
 /*
@@ -34,26 +46,36 @@ void perish(char *prefix)
         fprintf(stderr, "%s - ", prefix);
     }
     perror(NULL);
+
+    free_externals();
     exit(0);
 }
 
-void pit_status(char *argv[])
+void pit_version(char *argv[])
 {
-    puts("pit: status is not implemented yet");
+    printf("pit version %s\n", PIT_VERSION);
 }
 
 int main(int argc, char *argv[]) {
-    register int i;
-    char *commands[] = { "project", "task", "note", "log", "init", "status", "help" };
-    void (*handlers[])(char *argv[]) = { pit_project, pit_task, pit_note, pit_log, pit_init, pit_status, pit_help };
+    register int i, candidate = -1;
+    char *command[] = { "project", "task", "note", "log", "init", "info", "help", "version" };
+    void (*handler[])(char *argv[]) = { pit_project, pit_task, pit_note, pit_log, pit_init, pit_info, pit_help, pit_version };
 
     if (argc == 1) argv[1] = "help";
-    for(i = 0;  i < ARRAY_SIZE(commands);  i++) {
-        if (strstr(commands[i], argv[1]) == commands[i]) {
-            handlers[i](&argv[1]);
-            return 1;
+    for(i = 0;  i < ARRAY_SIZE(command);  i++) {
+        if (strstr(command[i], argv[1]) == command[i]) {
+            if (candidate < 0) {
+                candidate = i;
+            } else {
+                die("ambiguous command (%s)", argv[1]);
+            }
         }
     }
-    printf("invalid command: %s", argv[1]);
-    return 0;
+
+    if (candidate < 0)
+        die("invalid command (%s), run 'pit help' for help", argv[1]);
+
+    handler[candidate](&argv[1]);
+    free_externals();
+    return 1;
 }

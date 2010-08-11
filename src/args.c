@@ -28,9 +28,9 @@ char *pit_arg_string(char **arg, char *required)
     return *arg;
 }
 
-ulong pit_arg_number(char **arg, char *required)
+int pit_arg_number(char **arg, char *required)
 {
-    ulong number = 0L;
+    int number = 0;
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
@@ -143,14 +143,15 @@ time_t pit_arg_date(char **arg, char *required)
         memset(&tm, 0, sizeof(tm));
         // printf("format: %s\n", format);
         if (strptime(*arg, format, &tm)) {
-            printf("then: %s\n", asctime(&tm));
+            // printf("then: %s\n", asctime(&tm));
             if (!tm.tm_mday) tm.tm_mday  = ptm->tm_mday;
             if (!tm.tm_mon)  tm.tm_mon   = ptm->tm_mon;
             if (!tm.tm_year) tm.tm_year  = ptm->tm_year;
-
+            tm.tm_isdst = -1;
             // printf(" now: %s\n", asctime(ptm));
             // printf(" adj: %s\n", asctime(&tm));
             seconds = mktime(&tm);
+            // printf("ctime: %s", ctime(&seconds));
             if (seconds == (time_t)-1) {
                 perish("invalid date");
             }

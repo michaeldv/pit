@@ -19,31 +19,41 @@ static char *pit_file_name()
     return file_name;
 }
 
-static void read_header(FILE *file)
+static bool read_and_validate_header(FILE *file)
 {
-    Header hd;
+    header = (PHeader)calloc(1, sizeof(Header));
 
-    if (fread(&hd, sizeof(hd), 1, file)) {
-        if (hd.signature[0] != 0x50 || hd.signature[1] != 0x49 || hd.signature[2] != 0x54) {
-            die("invalid pit file");
+    if (fread(header, sizeof(Header), 1, file)) {
+        if (header->signature[0] != 0x50 || header->signature[1] != 0x49 || header->signature[2] != 0x54) {
+            printf("pit: invalid pit file (%s)\n", pit_file_name());
+            return FALSE;
         }
-        if (hd.schema_version != 0x01) {
-            die("invalid pit file version");
+        if (header->schema_version != PIT_SCHEMA_VERSION) {
+            printf("pit: invalid pit file version (%d)\n", header->schema_version);
+            return FALSE;
         }
     } else {
-        die("couldn't read header");
+        puts("pit: error reading pit file header");
+        return FALSE;
     }
+
+    return TRUE;
 }
 
 static void write_header(FILE *file)
 {
-    Header hd;
+    if (!header) header = (PHeader)calloc(1, sizeof(Header));
 
-    hd.signature[0] = 0x50; hd.signature[1] = 0x49; hd.signature[2] = 0x54;
-    hd.schema_version = 0x01;
-    memset(&hd.reserved, 0, sizeof(hd.reserved));
+    header->signature[0] = 0x50; header->signature[1] = 0x49; header->signature[2] = 0x54;
+    header->schema_version = PIT_SCHEMA_VERSION;
+    if (!header->created_at) {
+        header->created_at = time(NULL);
+        strncpy(header->created_by, current_user(), sizeof(header->created_by) - 1);
+    }
+    header->updated_at = time(NULL);
+    strncpy(header->updated_by, current_user(), sizeof(header->updated_by) - 1);
 
-    if (!fwrite(&hd, sizeof(hd), 1, file)) {
+    if (!fwrite(header, sizeof(Header), 1, file)) {
         die("couldn't write header");
     }
 }
@@ -66,6 +76,19 @@ void pit_init(char *argv[]) {
     }
 }
 
+void pit_info(char *argv[])
+{
+    pit_db_load();
+    printf("Pit file name:   %s\n", pit_file_name());
+    printf("Created by:      %s on %s", header->created_by, ctime(&header->created_at)); 
+    printf("Last updated by: %s on %s", header->updated_by, ctime(&header->updated_at)); 
+    printf("Schema version:  %d\n", header->schema_version);
+    printf("Projects:        %d\n", projects->number_of_records); 
+    printf("Tasks:           %d\n", tasks->number_of_records); 
+    printf("Notes:           %d\n", notes->number_of_records); 
+    printf("Log entries:     %d\n", actions->number_of_records); 
+}
+
 void pit_db_load() {
     char *file_name = pit_file_name();
     FILE *file = fopen(file_name, "r");
@@ -73,20 +96,24 @@ void pit_db_load() {
     if (!file) {
         perish(file_name);
     } else {
-        read_header(file);
-        projects = pit_table_load(file);
-        tasks    = pit_table_load(file);
-        notes    = pit_table_load(file);
-        actions  = pit_table_load(file);
-        fclose(file);
+        if (read_and_validate_header(file)) {
+            projects = pit_table_load(file);
+            tasks    = pit_table_load(file);
+            notes    = pit_table_load(file);
+            actions  = pit_table_load(file);
+            fclose(file);
+        } else {
+            fclose(file);
+            die(NULL);
+        }
     }
 }
 
 void pit_db_initialize() {
-    projects = pit_table_initialize(sizeof(Project),  TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
-    tasks    = pit_table_initialize(sizeof(Task),     TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
-    notes    = pit_table_initialize(sizeof(Note),     TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
-    actions  = pit_table_initialize(sizeof(Action), TABLE_HAS_CREATED_AT);
+    projects = pit_table_initialize(sizeof(Project), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
+    tasks    = pit_table_initialize(sizeof(Task),    TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
+    notes    = pit_table_initialize(sizeof(Note),    TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
+    actions  = pit_table_initialize(sizeof(Action),  TABLE_HAS_CREATED_AT);
 
     pit_action(0, "pit", "Initialized pit");
 

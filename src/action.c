@@ -11,13 +11,13 @@ static void action_list()
     if (actions->number_of_records > 0) {
         ppager = pit_pager_initialize(PAGER_ACTION, actions->number_of_records);
         for_each_action(pa) {
-            pit_pager_print(ppager, (uchar *)pa);
+            pit_pager_print(ppager, (char *)pa);
         }
         pit_pager_flush(ppager);
     }
 }
 
-void pit_action(ulong id, char *subject, char *message)
+void pit_action(int id, char *subject, char *message)
 {
     static Action action;
 
@@ -28,7 +28,7 @@ void pit_action(ulong id, char *subject, char *message)
     strncpy(action.username, current_user(), sizeof(action.username) - 1);
     strncpy(action.message, message, sizeof(action.message) - 1);
 
-    pit_table_insert(actions, (uchar *)&action);
+    pit_table_insert(actions, (char *)&action);
 }
 
 void pit_log(char *argv[])
