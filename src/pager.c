@@ -45,7 +45,7 @@ static void print_tasks(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds  (%%d note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -67,7 +67,7 @@ static void print_tasks_with_date(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%-%ds  (%%d note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%-%ds (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.date, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -90,7 +90,7 @@ static void print_tasks_with_time(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dd: (%%-%ds)  %%-%ds  %%-%ds  %%%ds  %%-%ds  (%%d note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%%ds %%-%ds (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.time, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -113,7 +113,7 @@ static void print_tasks_with_date_and_time(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%%ds %%-%ds  (%%d note%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%%ds %%-%ds (%%d note%%s)\n",
         ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.date, ppager->max.task.time, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {

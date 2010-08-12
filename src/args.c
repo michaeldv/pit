@@ -95,6 +95,8 @@ time_t pit_arg_date(char **arg, char *required)
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
+    } else if (!strcmp(*arg, "none")) {                                 /* Drop dat value */
+        return -1;
     } else {
         bool alpha_date = isalpha(**arg);
         bool slash_date = (strchr(*arg, '/') != NULL);
@@ -169,6 +171,8 @@ time_t pit_arg_time(char **arg, char *required)
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
+    } else if (!strcmp(*arg, "none")) {     /* Drop time value */
+        return -1;
     } else {                                /* Suppored time formats are :MM, HH:MM, and HH */
         char *colon = strchr(*arg, ':');
         if (colon == *arg) {                /* :MM - minutes only */

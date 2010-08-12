@@ -49,7 +49,22 @@ static void task_list(POptions po)
 
 static void task_show(int id)
 {
-    printf("task_show(%d)\n", id);
+    PTask pt;
+
+    pit_db_load();
+    id = task_find_current(id, &pt);
+
+    if (pt) {
+        printf("* %d: (%s) %s (project: %d, status: %s, priority: %s", pt->id, pt->username, pt->name, pt->project_id, pt->status, pt->priority);
+        if (pt->date) printf(", date: %s", format_date(pt->date));
+        if (pt->time) printf(", time: %s", format_time(pt->time));
+        printf(", %d note%s)\n", pt->number_of_notes, pt->number_of_notes == 1 ? "" : "s");
+        printf("The task was created on %s, last updated on %s\n", format_timestamp(pt->created_at), format_timestamp(pt->updated_at));
+        pit_table_mark(tasks, pt->id);
+        pit_db_save();
+    } else {
+        die("could not find the task");
+    }
 }
 
 static void task_create(POptions po)
@@ -72,8 +87,8 @@ static void task_create(POptions po)
         strncpy(t.priority, po->task.priority, sizeof(t.priority) - 1);
         strncpy(t.username, current_user(),    sizeof(t.username) - 1);
         t.project_id = pp->id;
-        t.date = po->task.date;
-        t.time = po->task.time;
+        t.date = max(0, po->task.date);
+        t.time = max(0, po->task.time);
 
         pt = (PTask)pit_table_insert(tasks, (char *)&t);
         pit_table_mark(tasks, pt->id);
@@ -93,8 +108,8 @@ static void task_update(int id, POptions po)
     if (po->task.name)     strncpy(pt->name,     po->task.name,     sizeof(pt->name) - 1);
     if (po->task.status)   strncpy(pt->status,   po->task.status,   sizeof(pt->status) - 1);
     if (po->task.priority) strncpy(pt->priority, po->task.priority, sizeof(pt->priority) - 1);
-    if (po->task.date) pt->date = po->task.date;
-    if (po->task.time) pt->time = po->task.time;
+    if (po->task.date) pt->date = max(0, po->task.date);
+    if (po->task.time) pt->time = max(0, po->task.time);
     pit_table_mark(tasks, pt->id);
 
     task_log_update(pt, po);
@@ -168,8 +183,8 @@ static void task_log_create(PTask pt, POptions po)
     char str[256];
 
     sprintf(str, "created task %d: %s (status: %s, priority: %s", pt->id, po->task.name, po->task.status, po->task.priority);
-    if (po->task.date) sprintf(str + strlen(str), ", date: %s", format_date(po->task.date));
-    if (po->task.time) sprintf(str + strlen(str), ", time: %s", format_time(po->task.time));
+    if (po->task.date > 0) sprintf(str + strlen(str), ", date: %s", format_date(po->task.date));
+    if (po->task.time > 0) sprintf(str + strlen(str), ", time: %s", format_time(po->task.time));
     strcat(str, ")");
     puts(str);
     pit_action(pt->id, "task", str);
@@ -196,10 +211,20 @@ static void task_log_update(PTask pt, POptions po)
         empty = FALSE;
     }
     if (po->task.date) {
-        sprintf(str + strlen(str), "%sdate: %s", (empty ? "" : ", "), format_date(po->task.date));
+        if (po->task.date < 0) {
+            sprintf(str + strlen(str), "%sdate: none", (empty ? "" : ", "));
+        } else {
+            sprintf(str + strlen(str), "%sdate: %s", (empty ? "" : ", "), format_date(po->task.date));
+        }
         empty = FALSE;
     }
-    if (po->task.time) sprintf(str + strlen(str), "%stime: %s", (empty ? "" : ", "), format_time(po->task.time));
+    if (po->task.time) {
+        if (po->task.time < 0) {
+            sprintf(str + strlen(str), "%stime: none", (empty ? "" : ", "));
+        } else {
+            sprintf(str + strlen(str), "%stime: %s", (empty ? "" : ", "), format_time(po->task.time));
+        }
+    }
     strcat(str, ")");
     puts(str);
     pit_action(pt->id, "task", str);
@@ -266,7 +291,7 @@ void pit_task(char *argv[])
                 number = pit_arg_number(++arg, NULL);
                 if (!number) --arg;
                 task_parse_options(arg, &opt);
-                if (!opt.task.name && !opt.task.status && !opt.task.priority && !opt.task.date && !opt.task.time) {
+                if (is_zero((char *)&opt.task, sizeof(opt.task))) {
                     die("nothing to update");
                 } else {
                     task_update(number, &opt);
@@ -282,7 +307,7 @@ void pit_task(char *argv[])
                     task_show(opt.task.id);
                 } else {
                     task_parse_options(--arg, &opt);
-                    if (!opt.task.name && !opt.task.status && !opt.task.priority && !opt.task.date && !opt.task.time) {
+                    if (is_zero((char *)&opt.task, sizeof(opt.task))) {
                         task_show(0); /* Show current task if any. */
                     } else {
                         task_list(&opt);

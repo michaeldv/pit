@@ -16,8 +16,6 @@ typedef struct _Project {
     char   name[128];               /* Project name. */
     char   status[16];              /* Project status. */
     int    number_of_tasks;         /* Number of tasks for the project. */
-    int    created_by;              /* Who created the project? */
-    int    updated_by;              /* Who last updated the project? */
     time_t created_at;              /* When the project was created? */
     time_t updated_at;              /* When the project was last updated? */
 } Project, *PProject;

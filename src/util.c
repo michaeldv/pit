@@ -18,13 +18,17 @@ char *mem2str(char *mem, int len) {
     return str;
 }
 
-bool zero(char *mem, int len) {
+bool is_zero(char *mem, int len) {
     char *pch = mem;
 
     while(pch - mem < len) {
         if (*pch++) return FALSE;
     }
     return TRUE;
+}
+
+void printa(char *msg[]) {
+    while(*msg) puts(*msg++);
 }
 
 char *current_user() {
@@ -96,6 +100,16 @@ char *format_time(time_t time)
     int mm = (time - hh * 3600) / 60;
 
     sprintf(str, "%d:%02d", hh, mm);
+    return str;
+}
+
+char *format_timestamp(time_t timestamp)
+{
+    static char str[32];
+    struct tm *ptm = localtime(&timestamp);
+
+    strftime(str, sizeof(str), "%b %d, %Y at %H:%M", ptm);
+
     return str;
 }
 

@@ -146,7 +146,7 @@ char *pit_table_delete(PTable pt, int id) {
 */
 char *pit_table_insert(PTable pt, char *record) {
     register char **pi;
-    register time_t now;
+    register time_t now = time(NULL);
 
     if (pt->number_of_records >= pt->number_of_slots) {
         pt = table_extend(pt);
@@ -170,7 +170,6 @@ char *pit_table_insert(PTable pt, char *record) {
     ** fields of type "time_t".
     */
     if (pt->flags & TABLE_HAS_CREATED_AT || pt->flags & TABLE_HAS_UPDATED_AT) {
-        now = time(NULL);
         *(time_t *)(*pi + pt->record_size - sizeof(time_t)) = now;
     }
     if (pt->flags & TABLE_HAS_CREATED_AT && pt->flags & TABLE_HAS_UPDATED_AT) {

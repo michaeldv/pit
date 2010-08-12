@@ -65,7 +65,7 @@ void pit_init(char *argv[]) {
 
     if (!access(file_name, F_OK)) {
         if (!*arg || strcmp(*arg, "-f")) { /* Do not prompt user if forced init (-f). */
-            printf("%s already exist, do you want to override it [y/N]: ", file_name);
+            printf("%s already exists, do you want to override it [y/N]: ", file_name);
             reply = getchar();
         }
     }
@@ -80,8 +80,8 @@ void pit_info(char *argv[])
 {
     pit_db_load();
     printf("Pit file name:   %s\n", pit_file_name());
-    printf("Created by:      %s on %s", header->created_by, ctime(&header->created_at)); 
-    printf("Last updated by: %s on %s", header->updated_by, ctime(&header->updated_at)); 
+    printf("Created by:      %s on %s\n", header->created_by, format_timestamp(header->created_at)); 
+    printf("Last updated by: %s on %s\n", header->updated_by, format_timestamp(header->updated_at)); 
     printf("Schema version:  %d\n", header->schema_version);
     printf("Projects:        %d\n", projects->number_of_records); 
     printf("Tasks:           %d\n", tasks->number_of_records); 

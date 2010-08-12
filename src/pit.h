@@ -5,7 +5,8 @@
 
 typedef int bool;
 
-#include <time.h>
+#define __USE_XOPEN
+#include <time.h>       /* __USE_XOPEN needed for strptime() */
 #include "object.h"
 #include "table.h"
 #include "pager.h"
@@ -47,8 +48,9 @@ void pit_project(char *argv[]);
 void pit_task(char *argv[]);
 void pit_note(char *argv[]);
 void pit_log(char *argv[]);
-void pit_status(char *argv[]);
+void pit_info(char *argv[]);
 void pit_help(char *argv[]);
+void pit_version();
 void pit_db_load();
 void pit_db_save();
 void pit_db_initialize();
@@ -70,12 +72,14 @@ void  die(char *msg, ...);
 void  perish(char *prefix);
 char *str2str(char *str);
 char *mem2str(char *mem, int len);
-bool zero(char *mem, int len);
+bool  is_zero(char *mem, int len);
+void  printa(char *msg[]);
 char *current_user();
 char *home_dir(char *username, int len);
 char *expand_path(char *path, char *expanded);
 char *format_date(time_t date);
 char *format_time(time_t time);
+char *format_timestamp(time_t timestamp);
 char *inline_replace(char *this, char *old, char *new);
 
 #endif

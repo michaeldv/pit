@@ -46,6 +46,23 @@ static void project_list(POptions po)
     }
 }
 
+static void project_show(int id)
+{
+    PProject pp;
+
+    pit_db_load();
+    id = project_find_current(id, &pp);
+
+    if (pp) {
+        printf("* %d: (%s) %s (status: %s, %d task%s)\n", pp->id, pp->username, pp->name, pp->status, pp->number_of_tasks, (pp->number_of_tasks != 1 ? "s" : ""));
+        printf("The project was created on %s, last updated on %s\n", format_timestamp(pp->created_at), format_timestamp(pp->updated_at));
+        pit_table_mark(projects, pp->id);
+        pit_db_save();
+    } else {
+        die("could not find the project");
+    }
+}
+
 static void project_create(POptions po)
 {
     pit_db_load();
@@ -68,28 +85,6 @@ static void project_create(POptions po)
 
         project_log_create(pp, po);
         pit_db_save();
-    }
-}
-
-static void project_show(int id)
-{
-    PProject pp;
-
-    pit_db_load();
-    pp = (PProject)pit_table_find(projects, id);
-    if (pp) {
-        printf("%d: %s (%s, %d task%s)\n",
-            pp->id, pp->name, pp->status, pp->number_of_tasks, (pp->number_of_tasks != 1 ? "s" : ""));
-        if (pp->number_of_tasks > 0) {
-            puts("Tasks:");
-            for_each_task(pt) {
-                printf("  %c %d: %s (%d notes)\n", (pt->id == tasks->current ? '*' : ' '), pt->id, pt->name, pt->number_of_notes);
-            }
-        }
-        pit_table_mark(projects, pp->id);
-        pit_db_save();
-    } else {
-        die("could not find the project");
     }
 }
 
@@ -246,7 +241,7 @@ void pit_project(char *argv[])
                 number = pit_arg_number(++arg, NULL);
                 if (!number) --arg;
                 project_parse_options(arg, &opt);
-                if (zero((char *)&opt.project, sizeof(opt.project))) {
+                if (is_zero((char *)&opt.project, sizeof(opt.project))) {
                     die("nothing to update");
                 } else {
                     project_update(number, &opt);
@@ -262,7 +257,7 @@ void pit_project(char *argv[])
                     project_show(number);
                 } else {
                     project_parse_options(--arg, &opt);
-                    if (zero((char *)&opt.project, sizeof(opt.project))) {
+                    if (is_zero((char *)&opt.project, sizeof(opt.project))) {
                         project_show(0); /* Show current project if any. */
                     } else {
                         project_list(&opt);

@@ -61,7 +61,8 @@ int main(int argc, char *argv[]) {
     char *command[] = { "project", "task", "note", "log", "init", "info", "help", "version" };
     void (*handler[])(char *argv[]) = { pit_project, pit_task, pit_note, pit_log, pit_init, pit_info, pit_help, pit_version };
 
-    if (argc == 1) argv[1] = "help";
+    if (argc == 1) { argv[1] = "help"; argv[2] = NULL; }
+
     for(i = 0;  i < ARRAY_SIZE(command);  i++) {
         if (strstr(command[i], argv[1]) == command[i]) {
             if (candidate < 0) {
