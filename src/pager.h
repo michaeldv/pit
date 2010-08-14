@@ -8,6 +8,7 @@
 
 typedef struct _Pager {
     int   type;
+    int   indent;
     int   number_of_entries;
     char *entries;
     union {
@@ -30,10 +31,14 @@ typedef struct _Pager {
             int username;
             int subject;
         } action;
+        struct {
+            int id;
+            int username;
+        } note;
     } max;
 } Pager, *PPager;
 
-PPager pit_pager_initialize(int type, int number_of_entries);
+PPager pit_pager_initialize(int type, int indent, int number_of_entries);
 void   pit_pager_print(PPager ppager, char *entry);
 void   pit_pager_flush(PPager ppager);
 void   pit_pager_free(PPager ppager);

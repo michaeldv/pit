@@ -65,6 +65,10 @@ typedef union _Options {
         char  *name;
         char  *status;
     } project;
+    struct {
+        int    id;
+        char  *message;
+    } note;
 } Options, *POptions;
 
 #endif

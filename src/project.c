@@ -3,18 +3,6 @@
 #include <stdio.h>
 #include "pit.h"
 
-static void project_list(POptions po);
-static void project_show(int id);
-static void project_create(POptions po);
-static void project_update(int id, POptions po);
-static void project_delete(int id);
-static bool project_already_exist(char *name);
-static int  project_find_current(int id, PProject *ppp);
-static void project_log_create(PProject pp, POptions po);
-static void project_log_update(PProject pp, POptions po);
-static void project_log_delete(int id, char *name, int number_of_tasks);
-static void project_parse_options(char **arg, POptions po);
-
 /*
 ** CREATING PROJECTS:
 **   pit project -c name [-s status]
@@ -32,13 +20,74 @@ static void project_parse_options(char **arg, POptions po);
 **   pit project -q [number | [-n name] [-s status]]
 */
 
+static bool project_already_exist(char *name)
+{
+    pit_db_load();
+    for_each_project(pp) {
+        if (!strcmp(pp->name, name)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static int project_find_current(int id, PProject *ppp)
+{
+    if (id) {
+        *ppp = (PProject)pit_table_find(projects, id);
+        if (!*ppp) die("could not find project %d", id);
+    } else {
+        *ppp = (PProject)pit_table_current(projects);
+        if (!*ppp) die("could not find current project");
+    }
+    return *ppp ? (*(PProject *)ppp)->id : 0;
+}
+
+static void project_log_create(PProject pp, POptions po)
+{
+    char str[256];
+
+    sprintf(str, "created project %d: %s (status: %s)", pp->id, po->project.name, po->project.status);
+    pit_action(pp->id, "project", str);
+}
+
+static void project_log_update(PProject pp, POptions po)
+{
+    char str[256];
+    bool empty = TRUE;
+
+    sprintf(str, "updated project %d:", pp->id);
+    if (po->project.name) {
+        sprintf(str + strlen(str), " (name: %s", po->project.name);
+        empty = FALSE;
+    } else {
+        sprintf(str + strlen(str), " %s (", pp->name);
+    }
+    if (po->project.status) {
+        sprintf(str + strlen(str), "%sstatus: %s)", (empty ? "" : ", "), po->project.status);
+    }
+    strcat(str, ")");
+    pit_action(pp->id, "project", str);
+}
+
+static void project_log_delete(int id, char *name, int number_of_tasks)
+{
+    char str[256];
+
+    sprintf(str, "deleted project %d: %s", id, name);
+    if (number_of_tasks > 0) {
+        sprintf(str + strlen(str), " with %d task%s", number_of_tasks, (number_of_tasks == 1 ? "" : "s"));
+    }
+    pit_action(id, "project", str);
+}
+
 static void project_list(POptions po)
 {
     PPager ppager;
 
     pit_db_load();
     if (projects->number_of_records > 0) {
-        ppager = pit_pager_initialize(PAGER_PROJECT, projects->number_of_records);
+        ppager = pit_pager_initialize(PAGER_PROJECT, 0, projects->number_of_records);
         for_each_project(pp) {
             pit_pager_print(ppager, (char *)pp);
         }
@@ -54,9 +103,12 @@ static void project_show(int id)
     id = project_find_current(id, &pp);
 
     if (pp) {
-        printf("* %d: (%s) %s (status: %s, %d task%s)\n", pp->id, pp->username, pp->name, pp->status, pp->number_of_tasks, (pp->number_of_tasks != 1 ? "s" : ""));
-        printf("The project was created on %s, last updated on %s\n", format_timestamp(pp->created_at), format_timestamp(pp->updated_at));
+        /* printf("The project was created on %s, last updated on %s\n", format_timestamp(pp->created_at), format_timestamp(pp->updated_at)); */
+        printf("* %d: (%s) %s (status: %s, %d task%s)\n", 
+            pp->id, pp->username, pp->name, pp->status, pp->number_of_tasks, pp->number_of_tasks != 1 ? "s" : "");
         pit_table_mark(projects, pp->id);
+        if (pp->number_of_tasks > 0)
+            pit_task_list(NULL, pp);
         pit_db_save();
     } else {
         die("could not find the project");
@@ -70,9 +122,7 @@ static void project_create(POptions po)
     if (project_already_exist(po->project.name)) {
         die("project with the same name already exists");
     } else {
-        Project p, *pp;
-
-        memset(&p, 0, sizeof(p));
+        Project p = { 0 }, *pp;
 
         if (!po->project.status) po->project.status = "active";
 
@@ -137,70 +187,6 @@ static void project_delete(int id)
     }
 }
 
-static bool project_already_exist(char *name)
-{
-    pit_db_load();
-    for_each_project(pp) {
-        if (!strcmp(pp->name, name)) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-static int project_find_current(int id, PProject *ppp)
-{
-    if (id) {
-        *ppp = (PProject)pit_table_find(projects, id);
-        if (!*ppp) die("could not find project %d", id);
-    } else {
-        *ppp = (PProject)pit_table_current(projects);
-        if (!*ppp) die("could not find current project");
-    }
-    return *ppp ? (*(PProject *)ppp)->id : 0;
-}
-
-static void project_log_create(PProject pp, POptions po)
-{
-    char str[256];
-
-    sprintf(str, "created project %d: %s (status: %s)", pp->id, po->project.name, po->project.status);
-    puts(str);
-    pit_action(pp->id, "project", str);
-}
-
-static void project_log_update(PProject pp, POptions po)
-{
-    char str[256];
-    bool empty = TRUE;
-
-    sprintf(str, "updated project %d:", pp->id);
-    if (po->project.name) {
-        sprintf(str + strlen(str), " (name: %s", po->project.name);
-        empty = FALSE;
-    } else {
-        sprintf(str + strlen(str), " %s (", pp->name);
-    }
-    if (po->project.status) {
-        sprintf(str + strlen(str), "%sstatus: %s)", (empty ? "" : ", "), po->project.status);
-    }
-    strcat(str, ")");
-    puts(str);
-    pit_action(pp->id, "project", str);
-}
-
-static void project_log_delete(int id, char *name, int number_of_tasks)
-{
-    char str[256];
-    
-    sprintf(str, "deleted project %d: %s", id, name);
-    if (number_of_tasks > 0) {
-        sprintf(str + strlen(str), " with %d task%s", number_of_tasks, (number_of_tasks == 1 ? "" : "s"));
-    }
-    puts(str);
-    pit_action(id, "project", str);
-}
-
 static void project_parse_options(char **arg, POptions po)
 {
     while(*++arg) {
@@ -219,11 +205,10 @@ static void project_parse_options(char **arg, POptions po)
 
 void pit_project(char *argv[])
 {
-    Options opt;
     char **arg = &argv[1];
     int number = 0;
+    Options opt = {{ 0 }};
 
-    memset(&opt, 0, sizeof(opt));
     if (!*arg) {
         project_list(&opt); /* Show all projects. */
     } else { /* pit project [number] */

@@ -91,7 +91,7 @@ time_t pit_arg_date(char **arg, char *required)
     time_t now = time(NULL);
     time_t seconds = (time_t)0;
     struct tm *ptm = localtime(&now);
-    struct tm tm;
+    struct tm tm = { 0 };
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
@@ -142,7 +142,6 @@ time_t pit_arg_date(char **arg, char *required)
         adjust_time(arg, format);                                       /* Replace %H with %I%p for am/pm time */
 
         /* Ready to roll :-) */
-        memset(&tm, 0, sizeof(tm));
         // printf("format: %s\n", format);
         if (strptime(*arg, format, &tm)) {
             // printf("then: %s\n", asctime(&tm));

@@ -55,7 +55,9 @@ void pit_db_load();
 void pit_db_save();
 void pit_db_initialize();
 void pit_action(int id, char *subject, char *message);
+void pit_task_list(POptions po, PProject pp);
 void pit_task_delete(int id, PProject pp);
+void pit_note_list(PTask pt);
 void pit_note_delete(int id, PTask pt);
 
 

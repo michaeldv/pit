@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include "pit.h"
 
-PHeader header;
-PTable  projects;
-PTable  tasks;
-PTable  notes;
-PTable  actions;
+PHeader header   = NULL;
+PTable  projects = NULL;
+PTable  tasks    = NULL;
+PTable  notes    = NULL;
+PTable  actions  = NULL;
 
 void free_externals() {
     if (header)   free(header);
