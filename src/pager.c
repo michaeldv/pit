@@ -36,7 +36,7 @@ static void print_projects(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%c %%%dd: (%%-%ds) [%%-%ds] %%-%ds (%%d task%%s)\n",
+    sprintf(format, "%%c %%%dd: (%%-%ds) |%%-%ds| %%-%ds (%%d task%%s)\n",
         ppager->max.project.id, ppager->max.project.username, ppager->max.project.status, ppager->max.project.name
     );
     for_each_entry(ppager, pentry) {
@@ -79,7 +79,7 @@ static void print_tasks_with_date(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%%dc %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%-%ds (%%d note%%s)\n",
+    sprintf(format, "%%%dc %%%dd: (%%-%ds) |%%-%ds| |%%-%ds| %%-%ds %%-%ds (%%d note%%s)\n",
         ppager->indent, ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.date, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -102,7 +102,7 @@ static void print_tasks_with_time(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%%dc %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%%ds %%-%ds (%%d note%%s)\n",
+    sprintf(format, "%%%dc %%%dd: (%%-%ds) |%%-%ds| |%%-%ds| %%%ds %%-%ds (%%d note%%s)\n",
         ppager->indent, ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.time, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -125,7 +125,7 @@ static void print_tasks_with_date_and_time(PPager ppager)
     char **pentry;
     char format[64];
 
-    sprintf(format, "%%%dc %%%dd: (%%-%ds) [%%-%ds] [%%-%ds] %%-%ds %%%ds %%-%ds (%%d note%%s)\n",
+    sprintf(format, "%%%dc %%%dd: (%%-%ds) |%%-%ds| |%%-%ds| %%-%ds %%%ds %%-%ds (%%d note%%s)\n",
         ppager->indent, ppager->max.task.id, ppager->max.task.username, ppager->max.task.status, ppager->max.task.priority, ppager->max.task.date, ppager->max.task.time, ppager->max.task.name
     );
     for_each_entry(ppager, pentry) {
@@ -165,6 +165,13 @@ void pit_pager_print(PPager ppager, char *entry)
 
     for_each_entry(ppager, pentry) {
         switch(ppager->type) {
+        case PAGER_PROJECT:
+            sprintf(str, "%d", PROJECT(id));
+            ppager->max.project.id = max(ppager->max.project.id, strlen(str));
+            ppager->max.project.username = max(ppager->max.project.username, strlen(PROJECT(username)));
+            ppager->max.project.name = max(ppager->max.project.name, strlen(PROJECT(name)));
+            ppager->max.project.status = max(ppager->max.project.status, strlen(PROJECT(status)));
+            break;
         case PAGER_TASK:
             sprintf(str, "%d", TASK(id));
             ppager->max.task.id = max(ppager->max.task.id, strlen(str));
@@ -179,21 +186,14 @@ void pit_pager_print(PPager ppager, char *entry)
                 ppager->max.task.time = max(ppager->max.task.time, strlen(format_time(TASK(time))));
             }
             break;
-        case PAGER_PROJECT:
-            sprintf(str, "%d", ((PProject)*pentry)->id);
-            ppager->max.project.id = max(ppager->max.project.id, strlen(str));
-            ppager->max.project.username = max(ppager->max.project.username, strlen(((PProject)*pentry)->username));
-            ppager->max.project.name = max(ppager->max.project.name, strlen(((PProject)*pentry)->name));
-            ppager->max.project.status = max(ppager->max.project.status, strlen(((PProject)*pentry)->status));
-            break;
-        case PAGER_ACTION:
-            ppager->max.action.username = max(ppager->max.action.username, strlen(((PAction)*pentry)->username));
-            ppager->max.action.subject = max(ppager->max.action.subject, strlen(((PAction)*pentry)->subject));
-            break;
         case PAGER_NOTE:
             sprintf(str, "%d", NOTE(id));
             ppager->max.note.id = max(ppager->max.note.id, strlen(str));
-            ppager->max.note.username = max(ppager->max.note.username, strlen(((PNote)*pentry)->username));
+            ppager->max.note.username = max(ppager->max.note.username, strlen(NOTE(username)));
+            break;
+        case PAGER_ACTION:
+            ppager->max.action.username = max(ppager->max.action.username, strlen(ACTION(username)));
+            ppager->max.action.message = max(ppager->max.action.message, strlen(ACTION(message)));
             break;
         default:
             die("invalid pager type: %d\n", ppager->type);
@@ -246,3 +246,4 @@ void pit_pager_free(PPager ppager)
 #undef TASK
 #undef PROJECT
 #undef ACTION
+#undef NOTE

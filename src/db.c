@@ -110,13 +110,15 @@ void pit_db_load() {
 }
 
 void pit_db_initialize() {
+    Action a = { 0 };
+
     projects = pit_table_initialize(sizeof(Project), TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
     tasks    = pit_table_initialize(sizeof(Task),    TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
     notes    = pit_table_initialize(sizeof(Note),    TABLE_HAS_ID | TABLE_HAS_TIMESTAMPS);
     actions  = pit_table_initialize(sizeof(Action),  TABLE_HAS_CREATED_AT);
 
-    pit_action(0, "pit", "Initialized pit");
-
+    strcpy(a.message, "Initialized pit");
+    pit_action(&a);
     pit_db_save();
 }
 

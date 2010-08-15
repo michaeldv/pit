@@ -3,23 +3,6 @@
 #include <stdio.h>
 #include "pit.h"
 
-/*
-** CREATING PROJECTS:
-**   pit project -c name [-s status]
-**
-** EDITING PROJECTS:
-**   pit project -e [number] [-n name] [-s status]
-**
-** DELETING PROJECTS:
-**   pit project -d [number]
-**
-** VIEWING PROJECT:
-**   pit project [[-q] number]
-**
-** LISTING PROJECTS:
-**   pit project -q [number | [-n name] [-s status]]
-*/
-
 static bool project_already_exist(char *name)
 {
     pit_db_load();
@@ -45,40 +28,40 @@ static int project_find_current(int id, PProject *ppp)
 
 static void project_log_create(PProject pp, POptions po)
 {
-    char str[256];
+    Action a = { pp->id, 0 };
 
-    sprintf(str, "created project %d: %s (status: %s)", pp->id, po->project.name, po->project.status);
-    pit_action(pp->id, "project", str);
+    sprintf(a.message, "created project %d: %s (status: %s)", pp->id, po->project.name, po->project.status);
+    pit_action(&a);
 }
 
 static void project_log_update(PProject pp, POptions po)
 {
-    char str[256];
+    Action a = { pp->id, 0 };
     bool empty = TRUE;
 
-    sprintf(str, "updated project %d:", pp->id);
+    sprintf(a.message, "updated project %d:", pp->id);
     if (po->project.name) {
-        sprintf(str + strlen(str), " (name: %s", po->project.name);
+        sprintf(a.message + strlen(a.message), " (name: %s", po->project.name);
         empty = FALSE;
     } else {
-        sprintf(str + strlen(str), " %s (", pp->name);
+        sprintf(a.message + strlen(a.message), " %s (", pp->name);
     }
     if (po->project.status) {
-        sprintf(str + strlen(str), "%sstatus: %s)", (empty ? "" : ", "), po->project.status);
+        sprintf(a.message + strlen(a.message), "%sstatus: %s)", (empty ? "" : ", "), po->project.status);
     }
-    strcat(str, ")");
-    pit_action(pp->id, "project", str);
+    strcat(a.message, ")");
+    pit_action(&a);
 }
 
 static void project_log_delete(int id, char *name, int number_of_tasks)
 {
-    char str[256];
+    Action a = { id, 0 };
 
-    sprintf(str, "deleted project %d: %s", id, name);
+    sprintf(a.message, "deleted project %d: %s", id, name);
     if (number_of_tasks > 0) {
-        sprintf(str + strlen(str), " with %d task%s", number_of_tasks, (number_of_tasks == 1 ? "" : "s"));
+        sprintf(a.message + strlen(a.message), " with %d task%s", number_of_tasks, (number_of_tasks == 1 ? "" : "s"));
     }
-    pit_action(id, "project", str);
+    pit_action(&a);
 }
 
 static void project_list(POptions po)
@@ -147,6 +130,7 @@ static void project_update(int id, POptions po)
 
     if (po->project.name)   strncpy(pp->name,   po->project.name,   sizeof(pp->name)   - 1);
     if (po->project.status) strncpy(pp->status, po->project.status, sizeof(pp->status) - 1);
+    strncpy(pp->username, current_user(), sizeof(pp->username) - 1);
     pit_table_mark(projects, pp->id);
 
     project_log_update(pp, po);
@@ -203,6 +187,22 @@ static void project_parse_options(char **arg, POptions po)
     }
 }
 
+/*
+** CREATING PROJECTS:
+**   pit project -c name [-s status]
+**
+** EDITING PROJECTS:
+**   pit project -e [number] [-n name] [-s status]
+**
+** DELETING PROJECTS:
+**   pit project -d [number]
+**
+** VIEWING PROJECT:
+**   pit project [[-q] number]
+**
+** LISTING PROJECTS:
+**   pit project -q [number | [-n name] [-s status]]
+*/
 void pit_project(char *argv[])
 {
     char **arg = &argv[1];

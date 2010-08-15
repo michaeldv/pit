@@ -3,23 +3,6 @@
 #include <stdio.h>
 #include "pit.h"
     
-/*
-** CREATING TASKS:
-**   pit task -c name [-s status] [-p priority] [-d date] [-t time]
-**
-** EDITING TASKS:
-**   pit task -e [number] [-n name] [-s status] [-p priority] [-d date] [-t time]
-**
-** DELETING TASKS:
-**   pit task -d [number]
-**
-** VIEWING TASK:
-**   pit task [[-q] number]
-**
-** LISTING TASKS:
-**   pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-t time]]
-*/
-
 static int task_find_current(int id, PTask *ppt)
 {
     if (id) {
@@ -34,81 +17,65 @@ static int task_find_current(int id, PTask *ppt)
 
 static void task_log_create(PTask pt, POptions po)
 {
-    char str[256];
+    Action a = { pt->project_id, pt->id, 0 };
 
-    sprintf(str, "created task %d: %s (status: %s, priority: %s", pt->id, po->task.name, po->task.status, po->task.priority);
-    if (po->task.date > 0) sprintf(str + strlen(str), ", date: %s", format_date(po->task.date));
-    if (po->task.time > 0) sprintf(str + strlen(str), ", time: %s", format_time(po->task.time));
-    sprintf(str + strlen(str), ", project: %d)", pt->project_id);
-    pit_action(pt->id, "task", str);
+    sprintf(a.message, "created task %d: %s (status: %s, priority: %s", pt->id, po->task.name, po->task.status, po->task.priority);
+    if (po->task.date > 0) sprintf(a.message + strlen(a.message), ", date: %s", format_date(po->task.date));
+    if (po->task.time > 0) sprintf(a.message + strlen(a.message), ", time: %s", format_time(po->task.time));
+    sprintf(a.message + strlen(a.message), ", project: %d)", pt->project_id);
+    pit_action(&a);
 }
 
 static void task_log_update(PTask pt, POptions po)
 {
-    char str[256];
+    Action a = { pt->project_id, pt->id, 0 };
     bool empty = TRUE;
 
-    sprintf(str, "updated task %d:", pt->id);
+    sprintf(a.message, "updated task %d:", pt->id);
     if (po->task.name) {
-        sprintf(str + strlen(str), " (name: %s", po->task.name);
+        sprintf(a.message + strlen(a.message), " (name: %s", po->task.name);
         empty = FALSE;
     } else {
-        sprintf(str + strlen(str), " %s (", pt->name);
+        sprintf(a.message + strlen(a.message), " %s (", pt->name);
     }
     if (po->task.status) {
-        sprintf(str + strlen(str), "%sstatus: %s", (empty ? "" : ", "), po->task.status);
+        sprintf(a.message + strlen(a.message), "%sstatus: %s", (empty ? "" : ", "), po->task.status);
         empty = FALSE;
     }
     if (po->task.priority) {
-        sprintf(str + strlen(str), "%spriority: %s", (empty ? "" : ", "), po->task.priority);
+        sprintf(a.message + strlen(a.message), "%spriority: %s", (empty ? "" : ", "), po->task.priority);
         empty = FALSE;
     }
     if (po->task.date) {
         if (po->task.date < 0) {
-            sprintf(str + strlen(str), "%sdate: none", (empty ? "" : ", "));
+            sprintf(a.message + strlen(a.message), "%sdate: none", (empty ? "" : ", "));
         } else {
-            sprintf(str + strlen(str), "%sdate: %s", (empty ? "" : ", "), format_date(po->task.date));
+            sprintf(a.message + strlen(a.message), "%sdate: %s", (empty ? "" : ", "), format_date(po->task.date));
         }
         empty = FALSE;
     }
     if (po->task.time) {
         if (po->task.time < 0) {
-            sprintf(str + strlen(str), "%stime: none", (empty ? "" : ", "));
+            sprintf(a.message + strlen(a.message), "%stime: none", (empty ? "" : ", "));
         } else {
-            sprintf(str + strlen(str), "%stime: %s", (empty ? "" : ", "), format_time(po->task.time));
+            sprintf(a.message + strlen(a.message), "%stime: %s", (empty ? "" : ", "), format_time(po->task.time));
         }
         empty = FALSE;
     }
-    strcat(str, ")");
-    pit_action(pt->id, "task", str);
+    strcat(a.message, ")");
+    pit_action(&a);
 }
 
-static void task_log_delete(int id, char *name, int number_of_notes)
+static void task_log_delete(int project_id, int id, char *name, int number_of_notes)
 {
-    char str[256];
+    Action a = { project_id, id, 0 };
 
-    sprintf(str, "deleted task %d: %s", id, name);
+    sprintf(a.message, "deleted task %d: %s", id, name);
     if (number_of_notes > 0) {
-        sprintf(str + strlen(str), " with %d note%s", number_of_notes, (number_of_notes == 1 ? "" : "s"));
+        sprintf(a.message + strlen(a.message), " with %d note%s", number_of_notes, (number_of_notes == 1 ? "" : "s"));
     }
-    pit_action(id, "task", str);
-}
-
-void pit_task_list(POptions po, PProject pp)
-{
-    if (!tasks) pit_db_load();
-
-    if (tasks->number_of_records > 0) {
-        PPager ppager = pit_pager_initialize(PAGER_TASK, (pp ? 4 : 0), tasks->number_of_records);
-        if (!pp) pp = (PProject)pit_table_current(projects);
-
-        for_each_task(pt) {
-            if (pp && pt->project_id != pp->id)
-                continue;
-            pit_pager_print(ppager, (char *)pt);
-        }
-        pit_pager_flush(ppager);
-    }
+    sprintf(a.message + strlen(a.message), " (project: %d)", project_id);
+    pit_action(&a);
 }
 
 static void task_show(int id)
@@ -173,60 +140,11 @@ static void task_update(int id, POptions po)
     if (po->task.priority) strncpy(pt->priority, po->task.priority, sizeof(pt->priority) - 1);
     if (po->task.date) pt->date = max(0, po->task.date);
     if (po->task.time) pt->time = max(0, po->task.time);
+    strncpy(pt->username, current_user(), sizeof(pt->username) - 1);
     pit_table_mark(tasks, pt->id);
 
     task_log_update(pt, po);
     pit_db_save();
-}
-
-/*
-** A task could be deleted as standalone entity or as part of cascading project
-** delete. In later case we're going to have 'pp' set and the database loaded.
-*/
-void pit_task_delete(int id, PProject pp)
-{
-    PTask pt;
-    bool standalone = (pp == NULL);
-
-    if (standalone) pit_db_load();
-    id = task_find_current(id, &pt);
-    if (standalone) pp = (PProject)pit_table_find(projects, pt->project_id);
-
-    if (pp) {
-        /*
-        ** First delete task notes if any.
-        */
-        if (pt->number_of_notes > 0) {
-            for_each_note(pn) {
-                if (pn->task_id == id) {
-                    pit_note_delete(pn->id, pt);
-                    --pn; /* Make the note pointer stay since it now points to the next note. */
-                }
-            }
-        }
-        /*
-        ** Preserve task name and number_of_notes before deleting the task since
-        ** we need these for logging.
-        */
-        char *deleted_name = str2str(pt->name);
-        int deleted_number_of_notes = pt->number_of_notes;
-
-        pt = (PTask)pit_table_delete(tasks, id);
-        if (pt) {
-            pit_table_mark(tasks, 0); /* TODO: find better current task candidate.  */
-            task_log_delete(id, deleted_name, deleted_number_of_notes);
-            if (standalone) {
-                pp->number_of_tasks--;
-                pit_db_save();
-            }
-            free(deleted_name);
-        } else {
-            free(deleted_name);
-            die("could not delete task %d", id);
-        }
-    } else {
-        die("could not find project for task %d", id);
-    }
 }
 
 static void task_parse_options(char **arg, POptions po)
@@ -254,6 +172,88 @@ static void task_parse_options(char **arg, POptions po)
     }
 }
 
+void pit_task_list(POptions po, PProject pp)
+{
+    if (!tasks) pit_db_load();
+
+    if (tasks->number_of_records > 0) {
+        PPager ppager = pit_pager_initialize(PAGER_TASK, (pp ? 4 : 0), tasks->number_of_records);
+        if (!pp) pp = (PProject)pit_table_current(projects);
+
+        for_each_task(pt) {
+            if (pp && pt->project_id != pp->id)
+                continue;
+            pit_pager_print(ppager, (char *)pt);
+        }
+        pit_pager_flush(ppager);
+    }
+}
+
+/*
+** A task could be deleted as standalone entity or as part of cascading project
+** delete. In later case we're going to have 'pp' set and the database loaded.
+*/
+void pit_task_delete(int id, PProject pp)
+{
+    PTask pt;
+    bool standalone = (pp == NULL);
+
+    if (standalone) pit_db_load();
+    id = task_find_current(id, &pt);
+    if (standalone) pp = (PProject)pit_table_find(projects, pt->project_id);
+
+    if (pp) {
+        /*
+        ** Preserve task name and number_of_notes before deleting the task since
+        ** we need these for logging.
+        */
+        char *deleted_name = str2str(pt->name);
+        int deleted_number_of_notes = pt->number_of_notes;
+        /*
+        ** Delete task notes if any.
+        */
+        if (pt->number_of_notes > 0) {
+            for_each_note(pn) {
+                if (pn->task_id == id) {
+                    pit_note_delete(pn->id, pt);
+                    --pn; /* Make the note pointer stay since it now points to the next note. */
+                }
+            }
+        }
+        pt = (PTask)pit_table_delete(tasks, id);
+        if (pt) {
+            pit_table_mark(tasks, 0); /* TODO: find better current task candidate.  */
+            task_log_delete(pp->id, id, deleted_name, deleted_number_of_notes);
+            if (standalone) {
+                pp->number_of_tasks--;
+                pit_db_save();
+            }
+            free(deleted_name);
+        } else {
+            free(deleted_name);
+            die("could not delete task %d", id);
+        }
+    } else {
+        die("could not find project for task %d", id);
+    }
+}
+
+/*
+** CREATING TASKS:
+**   pit task -c name [-s status] [-p priority] [-d date] [-t time]
+**
+** EDITING TASKS:
+**   pit task -e [number] [-n name] [-s status] [-p priority] [-d date] [-t time]
+**
+** DELETING TASKS:
+**   pit task -d [number]
+**
+** VIEWING TASK:
+**   pit task [[-q] number]
+**
+** LISTING TASKS:
+**   pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-t time]]
+*/
 void pit_task(char *argv[])
 {
     int number = 0;

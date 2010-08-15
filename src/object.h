@@ -44,8 +44,9 @@ typedef struct _Note {
 } Note, *PNote;
 
 typedef struct _Action {
-    int    subject_id;              /* Reference to the specific Project, Task, or Note. */
-    char   subject[16];             /* Project, Task, or Note. */
+    int    project_id;              /* Project id (always set). */
+    int    task_id;                 /* Task id (set for task or note related actions). */
+    int    note_id;                 /* Note id (set for note related actions only). */
     char   username[32];            /* Who added the log message? */
     char   message[255];            /* Log message. */
     time_t created_at;              /* When log message was added? */    

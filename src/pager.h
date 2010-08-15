@@ -29,7 +29,7 @@ typedef struct _Pager {
         } task;
         struct {
             int username;
-            int subject;
+            int message;
         } action;
         struct {
             int id;

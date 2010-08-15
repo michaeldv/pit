@@ -5,11 +5,9 @@
 
 static void action_list()
 {
-    PPager ppager;
-
     pit_db_load();
     if (actions->number_of_records > 0) {
-        ppager = pit_pager_initialize(PAGER_ACTION, 0, actions->number_of_records);
+        PPager ppager = pit_pager_initialize(PAGER_ACTION, 0, actions->number_of_records);
         for_each_action(pa) {
             pit_pager_print(ppager, (char *)pa);
         }
@@ -17,17 +15,14 @@ static void action_list()
     }
 }
 
-void pit_action(int id, char *subject, char *message)
+void pit_action(PAction pa)
 {
-    static Action action = { 0 };
-
-    action.subject_id = id;
-    strncpy(action.subject, subject, sizeof(action.subject) - 1);
-    strncpy(action.username, current_user(), sizeof(action.username) - 1);
-    strncpy(action.message, message, sizeof(action.message) - 1);
-
-    pit_table_insert(actions, (char *)&action);
-    if (strcmp(subject, "pit")) puts(message);
+    if (pa) {
+        strncpy(pa->username, current_user(), sizeof(pa->username) - 1);
+        pit_table_insert(actions, (char *)pa);
+        if (pa->project_id || pa->task_id || pa->note_id) 
+            puts(pa->message);
+    }
 }
 
 void pit_log(char *argv[])
