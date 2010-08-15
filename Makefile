@@ -92,4 +92,4 @@ clean:
 .PHONY : test
 test:
 	./test/pit_test.rb
-	rm -f ./test/.pitfile
+	rm -f ./test/test.pitfile

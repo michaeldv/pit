@@ -298,7 +298,7 @@ PTable pit_table_load(FILE *file)
     read += fread(pt->slots, pt->record_size, pt->number_of_records, file);
     if (HAS_ID(pt)) {
         for(i = 1;  i <= pt->number_of_slots;  i++, pi++) {
-            if ((int)*pr == i) {
+            if (*(int *)pr == i) {
                 *pi = pr;
                 pr += pt->record_size;
             }

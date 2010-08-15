@@ -10,6 +10,7 @@ require "#{BASE}/pit_note"
 class PitTestRunner
   def self.run
     runner = self.new
+    STDOUT.sync = true
     runner.public_methods.grep(/^should_/).each do |method|
       runner.send(:before) if runner.respond_to?(:before)
       runner.send(method)
