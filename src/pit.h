@@ -75,6 +75,7 @@ void  perish(char *prefix);
 char *str2str(char *str);
 char *mem2str(char *mem, int len);
 bool  is_zero(char *mem, int len);
+char *stristr(char *haystack, char *needle);
 void  printa(char *msg[]);
 char *current_user();
 char *home_dir(char *username, int len);

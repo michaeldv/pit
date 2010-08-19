@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <sys/types.h>
@@ -25,6 +26,22 @@ bool is_zero(char *mem, int len) {
         if (*pch++) return FALSE;
     }
     return TRUE;
+}
+
+char *stristr(char *haystack, char *needle)
+{
+    char *start, *pn, *ps;
+
+    for (start = haystack;  *start;  start++) {
+        for (;  (*start && (toupper(*start) != toupper(*needle)));  start++) ;
+        if (!*start) return NULL;
+
+        ps = start;  pn = needle;
+        while (toupper(*ps++) == toupper(*pn++)) {
+            if (!*pn) return start;
+        }
+    }
+    return NULL;
 }
 
 void printa(char *msg[]) {

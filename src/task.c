@@ -163,8 +163,14 @@ static void task_parse_options(char **arg, POptions po)
         case 'd':
             po->task.date = pit_arg_date(++arg, "task date");
             break;
+        case 'D':
+            po->task.date_max = pit_arg_date(++arg, "task end date");
+            break;
         case 't':
             po->task.time = pit_arg_time(++arg, "task time");
+            break;
+        case 'T':
+            po->task.time_max = pit_arg_time(++arg, "task max time");
             break;
         default:
             die("invalid task option: %s", *arg);
@@ -172,6 +178,10 @@ static void task_parse_options(char **arg, POptions po)
     }
 }
 
+/*
+** Display a list of tasks based on any combination of name, status, priority,
+** date, time. If the project is set the search results get scoped by the project.
+*/
 void pit_task_list(POptions po, PProject pp)
 {
     if (!tasks) pit_db_load();
@@ -181,7 +191,14 @@ void pit_task_list(POptions po, PProject pp)
         if (!pp) pp = (PProject)pit_table_current(projects);
 
         for_each_task(pt) {
-            if (pp && pt->project_id != pp->id)
+            if ((pp && pt->project_id != pp->id)                                ||
+               (po->task.name && !stristr(pt->name, po->task.name))             ||
+               (po->task.status && !stristr(pt->status, po->task.status))       ||
+               (po->task.priority && !stristr(pt->priority, po->task.priority)) ||
+               (po->task.date && pt->date < po->task.date)                      ||
+               (po->task.date_max && pt->date > po->task.date_max)              ||
+               (po->task.time && pt->time < po->task.time)                      ||
+               (po->task.time_max && pt->time > po->task.time_max))
                 continue;
             pit_pager_print(ppager, (char *)pt);
         }
@@ -252,7 +269,7 @@ void pit_task_delete(int id, PProject pp)
 **   pit task [[-q] number]
 **
 ** LISTING TASKS:
-**   pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-t time]]
+**   pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-D date] [-t time] [-T time]]
 */
 void pit_task(char *argv[])
 {

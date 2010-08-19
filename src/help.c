@@ -72,7 +72,7 @@ static void help_task()
         "Viewing a task:\n",
         "   pit task [[-q] number]\n",
         "Searching tasks:\n",
-        "   pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-t time]]\n",
+        "   pit task -q [number | [-n name] [-s status] [-p priority] [-d date-from] [-D date-to] [-t time-min] [-T time-max]]\n",
         "Supported date formats:\n",
         "   none, 4/26, 4/26/2012, 4/26/12, '4/26 3pm', '4/26 19:30', '4/26/2012 3:15am', '4/26/12 17:00'",
         "   'Apr 26', 'Apr 26, 2012', 'Apr 26 3pm', 'Apr 26 19:30', 'Apr 26, 12 3:15am', 'Apr 26, 2012 17:00'\n",

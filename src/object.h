@@ -36,8 +36,9 @@ typedef struct _Task {
 
 typedef struct _Note {
     int    id;
-    int    task_id;                 /* Task the note belongs to. */
-    char   username[32];            /* User the note belongs to. */
+    int    project_id;              /* Project the note belongs to (0 if belongs to task). */
+    int    task_id;                 /* Task the note belongs to (0 if belongs to project). */
+    char   username[32];            /* User who created the note. */
     char   message[255];            /* The body of the note. */
     time_t created_at;              /* When the note was created? */
     time_t updated_at;              /* When the note was last updated? */
@@ -59,7 +60,9 @@ typedef union _Options {
         char  *status;
         char  *priority;
         time_t date;
+        time_t date_max;
         time_t time;
+        time_t time_max;
     } task;
     struct {
         int    id;
