@@ -56,6 +56,7 @@ typedef struct _Action {
 typedef union _Options {
     struct {
         int    id;
+        int    project_id;
         char  *name;
         char  *status;
         char  *priority;

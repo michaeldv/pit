@@ -174,7 +174,7 @@ static void project_delete(int id)
     }
 }
 
-static void project_parse_options(char **arg, POptions po)
+static void project_parse_options(int cmd, char **arg, POptions po)
 {
     while(*++arg) {
         switch(pit_arg_option(arg)) {
@@ -219,16 +219,17 @@ void pit_project(char *argv[])
         if (number) {
             project_show(number);
         } else {
-            switch(pit_arg_option(arg)) {
+            int cmd = pit_arg_option(arg);
+            switch(cmd) {
             case 'c': /* pit project -c name [-s status] */
                 opt.project.name = pit_arg_string(++arg, "project name");
-                project_parse_options(arg, &opt);
+                project_parse_options(cmd, arg, &opt);
                 project_create(&opt);
                 break;
             case 'e': /* pit project -e [number] [-n name] [-s status] */
                 number = pit_arg_number(++arg, NULL);
                 if (!number) --arg;
-                project_parse_options(arg, &opt);
+                project_parse_options(cmd, arg, &opt);
                 if (is_zero((char *)&opt.project, sizeof(opt.project))) {
                     die("nothing to update");
                 } else {
@@ -244,7 +245,7 @@ void pit_project(char *argv[])
                 if (number) {
                     project_show(number);
                 } else {
-                    project_parse_options(--arg, &opt);
+                    project_parse_options(cmd, --arg, &opt);
                     if (is_zero((char *)&opt.project, sizeof(opt.project))) {
                         project_show(0); /* Show current project if any. */
                     } else {

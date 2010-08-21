@@ -67,6 +67,8 @@ static void help_task()
         "   pit task -c name [-s status] [-p priority] [-d date] [-t time]\n",
         "Editing a task:\n",
         "   pit task -e [number] [-n name] [-s status] [-p priority] [-d date] [-t time]\n",
+        "Moving a task:\n",
+        "   pit task -m [number] -p number\n",
         "Deleting a task:\n",
         "   pit task -d [number]\n",
         "Viewing a task:\n",

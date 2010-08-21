@@ -66,6 +66,14 @@ static void task_log_update(PTask pt, POptions po)
     pit_action(&a);
 }
 
+static void task_log_move(PTask pt, POptions po)
+{
+    Action a = { pt->project_id, pt->id, 0 };
+
+    sprintf(a.message, "moved task %d: from project %d to project %d", pt->id, pt->project_id, po->task.project_id);
+    pit_action(&a);
+}
+
 static void task_log_delete(int project_id, int id, char *name, int number_of_notes)
 {
     Action a = { project_id, id, 0 };
@@ -147,7 +155,37 @@ static void task_update(int id, POptions po)
     pit_db_save();
 }
 
-static void task_parse_options(char **arg, POptions po)
+static void task_move(int id, POptions po)
+{
+    if (po->task.project_id) {
+        PTask pt;
+        PProject pp;
+
+        pit_db_load();
+        pp = (PProject)pit_table_find(projects, po->task.project_id);
+        if (pp) {
+            id = task_find_current(id, &pt);
+            /*
+            ** Log before changing the project so we could show old and new values.
+            */
+            task_log_move(pt, po);
+            pt->project_id = pp->id;
+            /*
+            ** Make both target project and task current so that subsequent 'pit t'
+            ** command would show where the task landed.
+            */
+            pit_table_mark(tasks, pt->id);
+            pit_table_mark(projects, pp->id);
+            pit_db_save();
+        } else {
+            die("could not find project %d", po->task.project_id);
+        }
+    } else {
+        die("missing project number");
+    }
+}
+
+static void task_parse_options(int cmd, char **arg, POptions po)
 {
     while(*++arg) {
         switch(pit_arg_option(arg)) {
@@ -158,7 +196,11 @@ static void task_parse_options(char **arg, POptions po)
             po->task.status = pit_arg_string(++arg, "task status");
             break;
         case 'p':
-            po->task.priority = pit_arg_string(++arg, "task priority");
+            if (cmd == 'm') {  /* task -m -p project (move command) */
+                po->task.project_id = pit_arg_number(++arg, "project number");
+            } else {
+                po->task.priority = pit_arg_string(++arg, "task priority");
+            }
             break;
         case 'd':
             po->task.date = pit_arg_date(++arg, "task date");
@@ -284,16 +326,17 @@ void pit_task(char *argv[])
         if (number) {
             task_show(number);
         } else {
-            switch(pit_arg_option(arg)) {
+            int cmd = pit_arg_option(arg);
+            switch(cmd) {
             case 'c': /* pit task -c name [-s status] [-p priority] [-d date] [-t time] */
                 opt.task.name = pit_arg_string(++arg, "task name");
-                task_parse_options(arg, &opt);
+                task_parse_options(cmd, arg, &opt);
                 task_create(&opt);
                 break;
             case 'e': /* pit task -e [number] [-n name] [-s status] [-p priority] [-d date] [-t time] */
                 number = pit_arg_number(++arg, NULL);
                 if (!number) --arg;
-                task_parse_options(arg, &opt);
+                task_parse_options(cmd, arg, &opt);
                 if (is_zero((char *)&opt.task, sizeof(opt.task))) {
                     die("nothing to update");
                 } else {
@@ -304,12 +347,18 @@ void pit_task(char *argv[])
                 number = pit_arg_number(++arg, NULL);
                 pit_task_delete(number, NULL); /* Delete the task, but keep its project. */
                 break;
+            case 'm': /* pit task -m [number] -p number */
+                number = pit_arg_number(++arg, NULL);
+                if (!number) --arg;
+                task_parse_options(cmd, arg, &opt);
+                task_move(number, &opt);
+                break;
             case 'q': /* pit task -q [number | [-n name] [-s status] [-p priority] [-d date] [-t time]] */
                 opt.task.id = pit_arg_number(++arg, NULL);
                 if (opt.task.id) {
                     task_show(opt.task.id);
                 } else {
-                    task_parse_options(--arg, &opt);
+                    task_parse_options(cmd, --arg, &opt);
                     if (is_zero((char *)&opt.task, sizeof(opt.task))) {
                         task_show(0); /* Show current task if any. */
                     } else {
