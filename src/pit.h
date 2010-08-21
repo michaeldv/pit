@@ -9,7 +9,7 @@ typedef int bool;
 #include <time.h>       /* __USE_XOPEN needed for strptime() */
 #include "object.h"
 #include "table.h"
-#include "pager.h"
+#include "format.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 

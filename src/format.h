@@ -36,11 +36,11 @@ typedef struct _Pager {
             int username;
         } note;
     } max;
-} Pager, *PPager;
+} Pager, *PFormat;
 
-PPager pit_pager_initialize(int type, int indent, int number_of_entries);
-void   pit_pager_print(PPager ppager, char *entry);
-void   pit_pager_flush(PPager ppager);
-void   pit_pager_free(PPager ppager);
+PFormat pit_pager_initialize(int type, int indent, int number_of_entries);
+void   pit_pager_print(PFormat pf, char *entry);
+void   pit_pager_flush(PFormat pf);
+void   pit_pager_free(PFormat pf);
 
 #endif

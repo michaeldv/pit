@@ -7,11 +7,11 @@ static void action_list()
 {
     pit_db_load();
     if (actions->number_of_records > 0) {
-        PPager ppager = pit_pager_initialize(PAGER_ACTION, 0, actions->number_of_records);
+        PFormat pf = pit_pager_initialize(PAGER_ACTION, 0, actions->number_of_records);
         for_each_action(pa) {
-            pit_pager_print(ppager, (char *)pa);
+            pit_pager_print(pf, (char *)pa);
         }
-        pit_pager_flush(ppager);
+        pit_pager_flush(pf);
     }
 }
 

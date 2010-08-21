@@ -229,7 +229,7 @@ void pit_task_list(POptions po, PProject pp)
     if (!tasks) pit_db_load();
 
     if (tasks->number_of_records > 0) {
-        PPager ppager = pit_pager_initialize(PAGER_TASK, (pp ? 4 : 0), tasks->number_of_records);
+        PFormat pf = pit_pager_initialize(PAGER_TASK, (pp ? 4 : 0), tasks->number_of_records);
         if (!pp) pp = (PProject)pit_table_current(projects);
 
         for_each_task(pt) {
@@ -242,9 +242,9 @@ void pit_task_list(POptions po, PProject pp)
                         (po->task.time && pt->time < po->task.time)                      ||
                         (po->task.time_max && pt->time > po->task.time_max))
                 )) continue;
-            pit_pager_print(ppager, (char *)pt);
+            pit_pager_print(pf, (char *)pt);
         }
-        pit_pager_flush(ppager);
+        pit_pager_flush(pf);
     }
 }
 

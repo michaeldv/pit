@@ -66,18 +66,18 @@ static void project_log_delete(int id, char *name, int number_of_tasks)
 
 static void project_list(POptions po)
 {
-    PPager ppager;
+    PFormat pf;
 
     pit_db_load();
     if (projects->number_of_records > 0) {
-        ppager = pit_pager_initialize(PAGER_PROJECT, 0, projects->number_of_records);
+        pf = pit_pager_initialize(PAGER_PROJECT, 0, projects->number_of_records);
         for_each_project(pp) {
             if ((po->project.name && !stristr(pp->name, po->project.name)) ||
                (po->project.status && !stristr(pp->status, po->project.status)))
                continue;
-            pit_pager_print(ppager, (char *)pp);
+            pit_pager_print(pf, (char *)pp);
         }
-        pit_pager_flush(ppager);
+        pit_pager_flush(pf);
     }
 }
 

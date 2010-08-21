@@ -115,14 +115,14 @@ void pit_note_list(PTask pt)
     if (!notes) pit_db_load();
 
     if (notes->number_of_records > 0) {
-        PPager ppager = pit_pager_initialize(PAGER_NOTE, pt ? 4 : 0, notes->number_of_records);
+        PFormat pf = pit_pager_initialize(PAGER_NOTE, pt ? 4 : 0, notes->number_of_records);
         if (!pt) pt = (PTask)pit_table_current(tasks);
         for_each_note(pn) {
             if (pt && pn->task_id != pt->id)
                 continue;
-            pit_pager_print(ppager, (char *)pn);
+            pit_pager_print(pf, (char *)pn);
         }
-        pit_pager_flush(ppager);
+        pit_pager_flush(pf);
     }
 }
 

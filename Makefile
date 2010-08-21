@@ -19,7 +19,7 @@ SRC = \
 	$(SRCDIR)/db.c \
 	$(SRCDIR)/help.c \
 	$(SRCDIR)/note.c \
-	$(SRCDIR)/pager.c \
+	$(SRCDIR)/format.c \
 	$(SRCDIR)/pit.c \
 	$(SRCDIR)/project.c \
 	$(SRCDIR)/table.c \
@@ -32,7 +32,7 @@ OBJ = \
 	$(OBJDIR)/db.o \
 	$(OBJDIR)/help.o \
 	$(OBJDIR)/note.o \
-	$(OBJDIR)/pager.o \
+	$(OBJDIR)/format.o \
 	$(OBJDIR)/pit.o \
 	$(OBJDIR)/project.o \
 	$(OBJDIR)/table.o \
@@ -65,8 +65,8 @@ $(OBJDIR)/help.o: $(SRCDIR)/help.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/
 $(OBJDIR)/note.o: $(SRCDIR)/note.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/note.o -c $(SRCDIR)/note.c
 
-$(OBJDIR)/pager.o: $(SRCDIR)/pager.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
-	$(CC) -o $(OBJDIR)/pager.o -c $(SRCDIR)/pager.c
+$(OBJDIR)/format.o: $(SRCDIR)/format.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
+	$(CC) -o $(OBJDIR)/format.o -c $(SRCDIR)/format.c
 
 $(OBJDIR)/pit.o: $(SRCDIR)/pit.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/pit.o -c $(SRCDIR)/pit.c
