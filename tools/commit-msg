@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Sample Pit integration hook.
+#
+# 1. Appends Pit task number to the commit message when you use
+#    task number as your git branch name.
+#
+# 2. Lets you specify task status and updates it in Pit accordingly.
+#
+# 3. Creates task note with the complete commit massage.
+#
+# Drop into .git/hooks/commit-msg
+# chmod +x .git/hooks/commit-msg
+
+pit="/usr/local/bin/pit"
+exec < /dev/tty
+
+ref=$(git symbolic-ref HEAD 2> /dev/null) || return
+branch=${ref#refs/heads/}
+
+if [[ $branch =~ ^([0-9]+)$ ]]
+then
+  pit_task=${BASH_REMATCH[1]}
+
+  echo "What is the status of task ${pit_task}?"
+  echo "  (I)n progress"
+  echo "  (P)ostponed"
+  echo "  (O)pen"
+  echo "  (D)one"
+  echo "Enter the status for task ${pit_task} [D]: "
+  read selection
+
+  status="done"
+  case $selection in
+    'i'|'I' )
+      status="in progress"
+      ;;
+    'p'|'P' )
+      status="postponed"
+      ;;
+    'o'|'O' )
+      status="open"
+      ;;
+  esac
+
+  commit="`grep -v "^#" $1`"
+  append="[task ${pit_task}, status:${status}]" 
+  echo >&2 "$append" >> "$1"
+  "${pit}" task -e "${pit_task}" -s "${status}"
+  "${pit}" note -c "${commit} ${append}"
+  exit 0
+fi
