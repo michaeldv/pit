@@ -79,6 +79,7 @@ void pit_init(char *argv[]) {
 void pit_info(char *argv[])
 {
     pit_db_load();
+    printf("Pit version:     %s\n", PIT_VERSION);
     printf("Pit file name:   %s\n", pit_file_name());
     printf("Created by:      %s on %s\n", header->created_by, format_timestamp(header->created_at)); 
     printf("Last updated by: %s on %s\n", header->updated_by, format_timestamp(header->updated_at)); 

@@ -47,7 +47,7 @@ static void project_log_update(PProject pp, POptions po)
         sprintf(a.message + strlen(a.message), " %s (", pp->name);
     }
     if (po->project.status) {
-        sprintf(a.message + strlen(a.message), "%sstatus: %s)", (empty ? "" : ", "), po->project.status);
+        sprintf(a.message + strlen(a.message), "%sstatus: %s", (empty ? "" : ", "), po->project.status);
     }
     strcat(a.message, ")");
     pit_action(&a);
@@ -72,6 +72,9 @@ static void project_list(POptions po)
     if (projects->number_of_records > 0) {
         ppager = pit_pager_initialize(PAGER_PROJECT, 0, projects->number_of_records);
         for_each_project(pp) {
+            if ((po->project.name && !stristr(pp->name, po->project.name)) ||
+               (po->project.status && !stristr(pp->status, po->project.status)))
+               continue;
             pit_pager_print(ppager, (char *)pp);
         }
         pit_pager_flush(ppager);

@@ -191,15 +191,15 @@ void pit_task_list(POptions po, PProject pp)
         if (!pp) pp = (PProject)pit_table_current(projects);
 
         for_each_task(pt) {
-            if ((pp && pt->project_id != pp->id)                                ||
-               (po->task.name && !stristr(pt->name, po->task.name))             ||
-               (po->task.status && !stristr(pt->status, po->task.status))       ||
-               (po->task.priority && !stristr(pt->priority, po->task.priority)) ||
-               (po->task.date && pt->date < po->task.date)                      ||
-               (po->task.date_max && pt->date > po->task.date_max)              ||
-               (po->task.time && pt->time < po->task.time)                      ||
-               (po->task.time_max && pt->time > po->task.time_max))
-                continue;
+            if ((pp && pt->project_id != pp->id) ||
+                (po && ((po->task.name && !stristr(pt->name, po->task.name))             ||
+                        (po->task.status && !stristr(pt->status, po->task.status))       ||
+                        (po->task.priority && !stristr(pt->priority, po->task.priority)) ||
+                        (po->task.date && pt->date < po->task.date)                      ||
+                        (po->task.date_max && pt->date > po->task.date_max)              ||
+                        (po->task.time && pt->time < po->task.time)                      ||
+                        (po->task.time_max && pt->time > po->task.time_max))
+                )) continue;
             pit_pager_print(ppager, (char *)pt);
         }
         pit_pager_flush(ppager);
