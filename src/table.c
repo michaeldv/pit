@@ -1,3 +1,19 @@
+/*
+** Copyright (c) 2010 Michael Dvorkin
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the Simplified BSD License (also
+** known as the "2-Clause License" or "FreeBSD License".)
+**
+** This program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.
+*/
+
+/*
+** Sqlite probably is a great backend alternative for pit. I just
+** figured I would have more fun writing it myself.
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -197,15 +213,15 @@ char *pit_table_insert(PTable pt, char *record)
         register char **pi = table_available_index(pt);
         *pi = pr;
         /*
-        ** Update record id if the table has primary key. The id must be the first
-        ** record field of type "unsigned long".
+        ** Update record id if the table has primary key. The id must
+        ** be the first record field of type "unsigned long".
         */
         pt->auto_increment++;
         *(int *)*pi = pt->auto_increment;
     }
     /*
-    ** Update created_at and/or updated_at which must be last one or two record
-    ** fields of type "time_t".
+    ** Update created_at and/or updated_at which must be last one or
+    ** two record fields of type "time_t".
     */
     if (HAS_CREATED_AT(pt) || HAS_UPDATED_AT(pt)) {
         *(time_t *)(pr + pt->record_size - sizeof(time_t)) = now;
@@ -229,7 +245,7 @@ char *pit_table_current(PTable pt)
 */
 char *pit_table_mark(PTable pt, int id)
 {
-    return pit_table_find(pt, pt->current = id);
+    return pit_table_find(pt, pt->current = id); /* <-- Assign and pass as parameter */
 }
 
 /*

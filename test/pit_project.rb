@@ -1,4 +1,14 @@
-module Pit
+# Copyright (c) 2010 Michael Dvorkin
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the Simplified BSD License (also
+# known as the "2-Clause License" or "FreeBSD License".)
+#
+# This program is distributed in the hope that it will be useful,
+# but without any warranty; without even the implied warranty of
+# merchantability or fitness for a particular purpose.
+
+module PitTest
   module Project
 
     def should_create_project
@@ -27,5 +37,6 @@ module Pit
       `#{@pit} project`.should_not.match /[\s|\*] 2:/m
       `#{@pit} project`.should.match /\s 1:/m
     end
+
   end
 end

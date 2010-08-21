@@ -1,3 +1,14 @@
+/*
+** Copyright (c) 2010 Michael Dvorkin
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the Simplified BSD License (also
+** known as the "2-Clause License" or "FreeBSD License".)
+**
+** This program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -14,7 +25,7 @@ int pit_arg_option(char **arg)
     if (pit_arg_is_option(arg)) {
         return *(*arg + 1);
     } else {
-        die("invalid option");
+        die("invalid option: %s", *arg);
         return 0;
     }
 }
@@ -95,7 +106,7 @@ time_t pit_arg_date(char **arg, char *required)
 
     if (required && (!*arg || pit_arg_is_option(arg))) {
         die("missing %s", required);
-    } else if (!strcmp(*arg, "none")) {                                 /* Drop dat value */
+    } else if (!strcmp(*arg, "none")) {                                 /* Drop date value */
         return -1;
     } else {
         bool alpha_date = isalpha(**arg);
@@ -113,7 +124,7 @@ time_t pit_arg_date(char **arg, char *required)
                     strcpy(format, "%m/%d/%Y %H:%M");                   /* 10/10/1992 19:30 */
                 }
             } else {
-                if (strlen(*arg) >= 12) {
+                if (strlen(*arg) >= 12) {                               /* TODO: this is too simplistic... */
                     if (alpha_date) {
                         strcpy(format, "%b %d, %Y %H");                 /* Oct 10, 1992 19 */
                     } else {
@@ -142,17 +153,17 @@ time_t pit_arg_date(char **arg, char *required)
         adjust_time(arg, format);                                       /* Replace %H with %I%p for am/pm time */
 
         /* Ready to roll :-) */
-        // printf("format: %s\n", format);
+        /* printf("format: %s\n", format); */
         if (strptime(*arg, format, &tm)) {
-            // printf("then: %s\n", asctime(&tm));
+            /* printf("then: %s\n", asctime(&tm)); */
             if (!tm.tm_mday) tm.tm_mday  = ptm->tm_mday;
             if (!tm.tm_mon)  tm.tm_mon   = ptm->tm_mon;
             if (!tm.tm_year) tm.tm_year  = ptm->tm_year;
             tm.tm_isdst = -1;
-            // printf(" now: %s\n", asctime(ptm));
-            // printf(" adj: %s\n", asctime(&tm));
+            /* printf(" now: %s\n", asctime(ptm)); */
+            /* printf(" adj: %s\n", asctime(&tm)); */
             seconds = mktime(&tm);
-            // printf("ctime: %s", ctime(&seconds));
+            /* printf("ctime: %s", ctime(&seconds)); */
             if (seconds == (time_t)-1) {
                 perish("invalid date");
             }

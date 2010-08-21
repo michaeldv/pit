@@ -1,3 +1,14 @@
+/*
+** Copyright (c) 2010 Michael Dvorkin
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the Simplified BSD License (also
+** known as the "2-Clause License" or "FreeBSD License".)
+**
+** This program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -115,14 +126,14 @@ void pit_note_list(PTask pt)
     if (!notes) pit_db_load();
 
     if (notes->number_of_records > 0) {
-        PFormat pf = pit_pager_initialize(PAGER_NOTE, pt ? 4 : 0, notes->number_of_records);
+        PFormat pf = pit_format_initialize(FORMAT_NOTE, pt ? 4 : 0, notes->number_of_records);
         if (!pt) pt = (PTask)pit_table_current(tasks);
         for_each_note(pn) {
             if (pt && pn->task_id != pt->id)
                 continue;
-            pit_pager_print(pf, (char *)pn);
+            pit_format(pf, (char *)pn);
         }
-        pit_pager_flush(pf);
+        pit_format_flush(pf);
     }
 }
 

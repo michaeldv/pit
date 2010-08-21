@@ -1,7 +1,17 @@
 #!/usr/bin/env ruby
 #
+# Copyright (c) 2010 Michael Dvorkin
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the Simplified BSD License (also
+# known as the "2-Clause License" or "FreeBSD License".)
+#
+# This program is distributed in the hope that it will be useful,
+# but without any warranty; without even the implied warranty of
+# merchantability or fitness for a particular purpose.
+
 BASE = File.dirname(File.expand_path(__FILE__))
-require "#{BASE}/pit_should"
+require "#{BASE}/tiny_should"
 require "#{BASE}/pit_date"
 require "#{BASE}/pit_project"
 require "#{BASE}/pit_task"
@@ -33,10 +43,10 @@ class PitTestRunner
     `#{@pit} init -f`
   end
 
-  include Pit::Date
-  include Pit::Project
-  include Pit::Task
-  include Pit::Note
+  include PitTest::Date
+  include PitTest::Project
+  include PitTest::Task
+  include PitTest::Note
 end
 
 PitTestRunner.run

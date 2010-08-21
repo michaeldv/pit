@@ -1,3 +1,14 @@
+/*
+** Copyright (c) 2010 Michael Dvorkin
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the Simplified BSD License (also
+** known as the "2-Clause License" or "FreeBSD License".)
+**
+** This program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -229,7 +240,7 @@ void pit_task_list(POptions po, PProject pp)
     if (!tasks) pit_db_load();
 
     if (tasks->number_of_records > 0) {
-        PFormat pf = pit_pager_initialize(PAGER_TASK, (pp ? 4 : 0), tasks->number_of_records);
+        PFormat pf = pit_format_initialize(FORMAT_TASK, (pp ? 4 : 0), tasks->number_of_records);
         if (!pp) pp = (PProject)pit_table_current(projects);
 
         for_each_task(pt) {
@@ -242,9 +253,9 @@ void pit_task_list(POptions po, PProject pp)
                         (po->task.time && pt->time < po->task.time)                      ||
                         (po->task.time_max && pt->time > po->task.time_max))
                 )) continue;
-            pit_pager_print(pf, (char *)pt);
+            pit_format(pf, (char *)pt);
         }
-        pit_pager_flush(pf);
+        pit_format_flush(pf);
     }
 }
 

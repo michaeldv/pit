@@ -1,3 +1,14 @@
+/*
+** Copyright (c) 2010 Michael Dvorkin
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the Simplified BSD License (also
+** known as the "2-Clause License" or "FreeBSD License".)
+**
+** This program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -144,11 +155,11 @@ static void print_tasks_with_date_and_time(PFormat pf)
     }
 }
 
-PFormat pit_pager_initialize(int type, int indent, int number_of_entries)
+PFormat pit_format_initialize(int type, int indent, int number_of_entries)
 {
-    PFormat pf = calloc(1, sizeof(Pager));
+    PFormat pf = calloc(1, sizeof(Format));
 
-    memset(pf, 0, sizeof(Pager));
+    memset(pf, 0, sizeof(Format));
     pf->type = type;
     pf->indent = indent;
     pf->entries = calloc(number_of_entries + 1, sizeof(char *));
@@ -156,7 +167,7 @@ PFormat pit_pager_initialize(int type, int indent, int number_of_entries)
     return pf;
 }
 
-void pit_pager_print(PFormat pf, char *entry)
+void pit_format(PFormat pf, char *entry)
 {
     char str[32];
 
@@ -165,14 +176,14 @@ void pit_pager_print(PFormat pf, char *entry)
 
     for_each_entry(pf, pentry) {
         switch(pf->type) {
-        case PAGER_PROJECT:
+        case FORMAT_PROJECT:
             sprintf(str, "%d", PROJECT(id));
             pf->max.project.id = max(pf->max.project.id, strlen(str));
             pf->max.project.username = max(pf->max.project.username, strlen(PROJECT(username)));
             pf->max.project.name = max(pf->max.project.name, strlen(PROJECT(name)));
             pf->max.project.status = max(pf->max.project.status, strlen(PROJECT(status)));
             break;
-        case PAGER_TASK:
+        case FORMAT_TASK:
             sprintf(str, "%d", TASK(id));
             pf->max.task.id = max(pf->max.task.id, strlen(str));
             pf->max.task.username = max(pf->max.task.username, strlen(TASK(username)));
@@ -186,25 +197,25 @@ void pit_pager_print(PFormat pf, char *entry)
                 pf->max.task.time = max(pf->max.task.time, strlen(format_time(TASK(time))));
             }
             break;
-        case PAGER_NOTE:
+        case FORMAT_NOTE:
             sprintf(str, "%d", NOTE(id));
             pf->max.note.id = max(pf->max.note.id, strlen(str));
             pf->max.note.username = max(pf->max.note.username, strlen(NOTE(username)));
             break;
-        case PAGER_ACTION:
+        case FORMAT_ACTION:
             pf->max.action.username = max(pf->max.action.username, strlen(ACTION(username)));
             pf->max.action.message = max(pf->max.action.message, strlen(ACTION(message)));
             break;
         default:
-            die("invalid pager type: %d\n", pf->type);
+            die("invalid format: %d\n", pf->type);
         }
     }
 }
 
-void pit_pager_flush(PFormat pf)
+void pit_format_flush(PFormat pf)
 {
     switch(pf->type) {
-    case PAGER_TASK:
+    case FORMAT_TASK:
         if (!pf->max.task.date && !pf->max.task.time) {
             print_tasks(pf);                         /* Neither date nor time. */
         } else if (pf->max.task.date) {
@@ -218,26 +229,26 @@ void pit_pager_flush(PFormat pf)
         }
         break;
 
-    case PAGER_PROJECT:
+    case FORMAT_PROJECT:
         print_projects(pf);
         break;
 
-    case PAGER_ACTION:
+    case FORMAT_ACTION:
         print_actions(pf);
         break;
 
-    case PAGER_NOTE:
+    case FORMAT_NOTE:
         print_notes(pf);
         break;
 
     default:
-        pit_pager_free(pf);
-        die("invalid pager type: %d\n", pf->type);
+        pit_format_free(pf);
+        die("invalid format: %d\n", pf->type);
     }
-    pit_pager_free(pf);
+    pit_format_free(pf);
 }
 
-void pit_pager_free(PFormat pf)
+void pit_format_free(PFormat pf)
 {
     free(pf->entries);
     free(pf);

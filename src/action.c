@@ -1,3 +1,14 @@
+/*
+** Copyright (c) 2010 Michael Dvorkin
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the Simplified BSD License (also
+** known as the "2-Clause License" or "FreeBSD License".)
+**
+** This program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -7,11 +18,11 @@ static void action_list()
 {
     pit_db_load();
     if (actions->number_of_records > 0) {
-        PFormat pf = pit_pager_initialize(PAGER_ACTION, 0, actions->number_of_records);
+        PFormat pf = pit_format_initialize(FORMAT_ACTION, 0, actions->number_of_records);
         for_each_action(pa) {
-            pit_pager_print(pf, (char *)pa);
+            pit_format(pf, (char *)pa);
         }
-        pit_pager_flush(pf);
+        pit_format_flush(pf);
     }
 }
 

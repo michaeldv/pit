@@ -1,3 +1,14 @@
+/*
+** Copyright (c) 2010 Michael Dvorkin
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the Simplified BSD License (also
+** known as the "2-Clause License" or "FreeBSD License".)
+**
+** This program is distributed in the hope that it will be useful,
+** but without any warranty; without even the implied warranty of
+** merchantability or fitness for a particular purpose.
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -70,14 +81,14 @@ static void project_list(POptions po)
 
     pit_db_load();
     if (projects->number_of_records > 0) {
-        pf = pit_pager_initialize(PAGER_PROJECT, 0, projects->number_of_records);
+        pf = pit_format_initialize(FORMAT_PROJECT, 0, projects->number_of_records);
         for_each_project(pp) {
             if ((po->project.name && !stristr(pp->name, po->project.name)) ||
                (po->project.status && !stristr(pp->status, po->project.status)))
                continue;
-            pit_pager_print(pf, (char *)pp);
+            pit_format(pf, (char *)pp);
         }
-        pit_pager_flush(pf);
+        pit_format_flush(pf);
     }
 }
 
