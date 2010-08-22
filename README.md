@@ -183,6 +183,7 @@ For example:
 
 ### License ###
 Copyright (c) 2010 Michael Dvorkin
+
 mike[at]dvorkin.net aka mike[at]fatfreecrm.com
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHORS "AS IS" AND ANY EXPRESS 
