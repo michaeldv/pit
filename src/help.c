@@ -17,16 +17,17 @@
 static void usage()
 {
     char *msg[] = {
+        "Pit is highly experimental software. Use it at your own risk. See LICENSE file for details.",
         "usage: pit command [args]\n",
         "The commands are:",
-        "   init       Create empty pit database or reinitialize an existing one",
-        "   project    Create, search, and manage pit projects",
-        "   task       Create, search, and manage pit tasks",
-        "   note       Create, search, and manage pit notes",
-        "   log        Show chronological pit activity log",
-        "   info       Show summary information about your pit database",
-        "   help       Show help information about pit",
-        "   version    Show pit version number\n",
+        "   init       Create empty Pit database or reinitialize an existing one",
+        "   project    Create, search, and manage Pit projects",
+        "   task       Create, search, and manage Pit tasks",
+        "   note       Create, search, and manage Pit notes",
+        "   log        Show chronological Pit activity log",
+        "   info       Show summary information about your Pit database",
+        "   help       Show help information about Pit",
+        "   version    Show Pit version number\n",
         "All commands might be shortened as long as they remain unambiguous. See 'pit help <command>' for more",
         "information on a specific command.\n", NULL
     };
@@ -36,8 +37,7 @@ static void usage()
 static void help_project()
 {
     char *msg[] = {
-        "Pit project is basic entity used to group related tasks together. In pit project has name and status, neither",
-        "of which have any semantical meaning and are just arbitrary strings.\n", 
+        "Pit project is basic entity used to group related tasks together. A project has name and status.\n", 
         "Creating a project:\n",
         "   $ pit project -c name [-s status]\n",
         "Editing a project:\n",
@@ -72,8 +72,8 @@ static void help_project()
 static void help_task()
 {
     char *msg[] = {
-        "In pit a task belongs to particular project. A task has name, status, priority, date, and time. All attributes",
-        "except the task name are optional.\n",
+        "In Pit a task belongs to a project and projects can have many tasks. Task attributes include name, status,",
+        "priority, date, and time. All attributes except the name are optional.\n",
         "Creating a task:\n",
         "   pit task -c name [-s status] [-p priority] [-d date] [-t time]\n",
         "Editing a task:\n",
@@ -114,13 +114,24 @@ static void help_task()
 
 static void help_note()
 {
-    puts("pit note is not implemented yet.");
+    char *msg[] = {
+        "Pit notes are attached to a task. The only attribute is the note's message body.\n",
+        "Creating a note:\n",
+        "  $ pit note -c message\n",
+        "Editing a note:\n",
+        "  $ pit note -e [number] message\n",
+        "Deleting a note:\n",
+        "  $ pit note -d [number]\n",
+        "Listing notes:\n",
+        "  $ pit note\n", NULL
+    };
+    printa(msg);
 }
 
 static void help_log()
 {
     char *msg[] = {
-        "Show summary information about your pit database. This command is as simple as:\n",
+        "Show summary information about your Pit database. This command is as simple as:\n",
         "   pit log\n", NULL
     };
     printa(msg);
@@ -129,7 +140,7 @@ static void help_log()
 static void help_init()
 {
     char *msg[] = {
-        "Create empty pit database or reinitialize an existing one. Default file name for the pit database",
+        "Create empty Pit database or reinitialize an existing one. Default file name for the Pit database",
         "is ~/.pit -- you can override the default by setting PITFILE environment variable.\n",
         "   $ pit init [-f]\n",
         "   -f   force initialization without prompt\n",
@@ -144,7 +155,7 @@ static void help_init()
 static void help_info()
 {
     char *msg[] = {
-        "Show summary information about your pit database. This command is as simple as:\n",
+        "Show summary information about your Pit database. This command is as simple as:\n",
         "   pit info\n", NULL
     };
     printa(msg);

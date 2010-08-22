@@ -83,6 +83,9 @@ $(OBJDIR)/task.o: $(SRCDIR)/task.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/
 $(OBJDIR)/util.o: $(SRCDIR)/util.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/table.h
 	$(CC) -o $(OBJDIR)/util.o -c $(SRCDIR)/util.c
 
+install:
+	cp $(BINDIR)/pit /usr/local/bin
+
 clean:
 	rm -f $(OBJDIR)/*.o
 	rm -f $(BINDIR)/$(APP)

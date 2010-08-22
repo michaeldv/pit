@@ -176,6 +176,7 @@ static void task_move(int id, POptions po)
         pp = (PProject)pit_table_find(projects, po->task.project_id);
         if (pp) {
             id = task_find_current(id, &pt);
+            PProject px = (PProject)pit_table_find(projects, pt->project_id);
             /*
             ** Log before changing the project so we could show old and new values.
             */
@@ -187,6 +188,8 @@ static void task_move(int id, POptions po)
             */
             pit_table_mark(tasks, pt->id);
             pit_table_mark(projects, pp->id);
+            px->number_of_tasks--;
+            pp->number_of_tasks++;
             pit_db_save();
         } else {
             die("could not find project %d", po->task.project_id);
