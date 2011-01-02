@@ -37,11 +37,11 @@ static int project_find_current(int id, PProject *ppp)
     return *ppp ? (*(PProject *)ppp)->id : 0;
 }
 
-static void project_log_create(PProject pp, POptions po)
+static void project_log_create(PProject pp)
 {
     Action a = { pp->id, 0 };
 
-    sprintf(a.message, "created project %d: %s (status: %s)", pp->id, po->project.name, po->project.status);
+    sprintf(a.message, "created project %d: %s (status: %s)", pp->id, pp->name, pp->status);
     pit_action(&a);
 }
 
@@ -52,13 +52,13 @@ static void project_log_update(PProject pp, POptions po)
 
     sprintf(a.message, "updated project %d:", pp->id);
     if (po->project.name) {
-        sprintf(a.message + strlen(a.message), " (name: %s", po->project.name);
+        sprintf(a.message + strlen(a.message), " (name: %s", pp->name);
         empty = FALSE;
     } else {
         sprintf(a.message + strlen(a.message), " %s (", pp->name);
     }
     if (po->project.status) {
-        sprintf(a.message + strlen(a.message), "%sstatus: %s", (empty ? "" : ", "), po->project.status);
+        sprintf(a.message + strlen(a.message), "%sstatus: %s", (empty ? "" : ", "), pp->status);
     }
     strcat(a.message, ")");
     pit_action(&a);
@@ -130,7 +130,7 @@ static void project_create(POptions po)
         pp = (PProject)pit_table_insert(projects, (char *)&p);
         pit_table_mark(projects, pp->id);
 
-        project_log_create(pp, po);
+        project_log_create(pp);
         pit_db_save();
     }
 }

@@ -26,15 +26,15 @@ static int note_find_current(int id, PNote *ppn)
     return *ppn ? (*(PNote *)ppn)->id : 0;
 }
 
-static void note_log_create(PTask pt, PNote pn, POptions po)
+static void note_log_create(PTask pt, PNote pn)
 {
     Action a = { pt->project_id, pt->id, pn->id, { 0 } };
     
-    sprintf(a.message, "created note %d: %s (task %d)", pn->id, po->note.message, pn->task_id);
+    sprintf(a.message, "created note %d: %s (task %d)", pn->id, pn->message, pn->task_id);
     pit_action(&a);
 }
 
-static void note_log_update(PTask pt, PNote pn, POptions po)
+static void note_log_update(PTask pt, PNote pn)
 {
     Action a = { pt->project_id, pt->id, pn->id, { 0 } };
 
@@ -67,7 +67,7 @@ static void note_create(POptions po)
         pn = (PNote)pit_table_insert(notes, (char *)&n);
         pit_table_mark(notes, pn->id);
         pt->number_of_notes++;
-        note_log_create(pt, pn, po);
+        note_log_create(pt, pn);
         pit_db_save();
     }
 }
@@ -83,7 +83,7 @@ static void note_update(int id, POptions po)
     strncpy(pn->username, current_user(),   sizeof(pn->username) - 1);
     pit_table_mark(notes, pn->id);
 
-    note_log_update((PTask)pit_table_find(tasks, pn->task_id), pn, po);
+    note_log_update((PTask)pit_table_find(tasks, pn->task_id), pn);
     pit_db_save();
 }
 

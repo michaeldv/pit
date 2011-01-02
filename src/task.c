@@ -26,13 +26,13 @@ static int task_find_current(int id, PTask *ppt)
     return *ppt ? (*(PTask *)ppt)->id : 0;
 }
 
-static void task_log_create(PTask pt, POptions po)
+static void task_log_create(PTask pt)
 {
     Action a = { pt->project_id, pt->id, 0 };
 
-    sprintf(a.message, "created task %d: %s (status: %s, priority: %s", pt->id, po->task.name, po->task.status, po->task.priority);
-    if (po->task.date > 0) sprintf(a.message + strlen(a.message), ", date: %s", format_date(po->task.date));
-    if (po->task.time > 0) sprintf(a.message + strlen(a.message), ", time: %s", format_time(po->task.time));
+    sprintf(a.message, "created task %d: %s (status: %s, priority: %s", pt->id, pt->name, pt->status, pt->priority);
+    if (pt->date > 0) sprintf(a.message + strlen(a.message), ", date: %s", format_date(pt->date));
+    if (pt->time > 0) sprintf(a.message + strlen(a.message), ", time: %s", format_time(pt->time));
     sprintf(a.message + strlen(a.message), ", project: %d)", pt->project_id);
     pit_action(&a);
 }
@@ -44,24 +44,24 @@ static void task_log_update(PTask pt, POptions po)
 
     sprintf(a.message, "updated task %d:", pt->id);
     if (po->task.name) {
-        sprintf(a.message + strlen(a.message), " (name: %s", po->task.name);
+        sprintf(a.message + strlen(a.message), " (name: %s", pt->name);
         empty = FALSE;
     } else {
         sprintf(a.message + strlen(a.message), " %s (", pt->name);
     }
     if (po->task.status) {
-        sprintf(a.message + strlen(a.message), "%sstatus: %s", (empty ? "" : ", "), po->task.status);
+        sprintf(a.message + strlen(a.message), "%sstatus: %s", (empty ? "" : ", "), pt->status);
         empty = FALSE;
     }
     if (po->task.priority) {
-        sprintf(a.message + strlen(a.message), "%spriority: %s", (empty ? "" : ", "), po->task.priority);
+        sprintf(a.message + strlen(a.message), "%spriority: %s", (empty ? "" : ", "), pt->priority);
         empty = FALSE;
     }
     if (po->task.date) {
         if (po->task.date < 0) {
             sprintf(a.message + strlen(a.message), "%sdate: none", (empty ? "" : ", "));
         } else {
-            sprintf(a.message + strlen(a.message), "%sdate: %s", (empty ? "" : ", "), format_date(po->task.date));
+            sprintf(a.message + strlen(a.message), "%sdate: %s", (empty ? "" : ", "), format_date(pt->date));
         }
         empty = FALSE;
     }
@@ -69,7 +69,7 @@ static void task_log_update(PTask pt, POptions po)
         if (po->task.time < 0) {
             sprintf(a.message + strlen(a.message), "%stime: none", (empty ? "" : ", "));
         } else {
-            sprintf(a.message + strlen(a.message), "%stime: %s", (empty ? "" : ", "), format_time(po->task.time));
+            sprintf(a.message + strlen(a.message), "%stime: %s", (empty ? "" : ", "), format_time(pt->time));
         }
         empty = FALSE;
     }
@@ -142,7 +142,7 @@ static void task_create(POptions po)
         pt = (PTask)pit_table_insert(tasks, (char *)&t);
         pit_table_mark(tasks, pt->id);
         pp->number_of_tasks++;
-        task_log_create(pt, po);
+        task_log_create(pt);
         pit_db_save();
     }
 }
