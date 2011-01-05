@@ -1,5 +1,7 @@
 #!/usr/bin/make
-#
+
+# Prefix directory where pit binary gets installed to.
+PREFIX = /usr/local
 
 # The toplevel directory of the source tree.
 SRCDIR = ./src
@@ -84,7 +86,7 @@ $(OBJDIR)/util.o: $(SRCDIR)/util.c $(SRCDIR)/pit.h $(SRCDIR)/object.h $(SRCDIR)/
 	$(CC) -o $(OBJDIR)/util.o -c $(SRCDIR)/util.c
 
 install:
-	cp $(BINDIR)/pit /usr/local/bin
+	cp $(BINDIR)/$(APP) $(PREFIX)/bin/$(APP)
 
 clean:
 	rm -f $(OBJDIR)/*.o
