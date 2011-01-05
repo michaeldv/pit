@@ -11,7 +11,7 @@ has been tested to compile on Mac OS Leopard, Ubuntu, and RedHat Linux.
     $ cd pit
     $ make
     $ make test     # <-- Optional, requires Ruby
-    $ sudo make install
+    $ sudo make install # or 'make install PREFIX=${HOME}' to install in ${HOME}/bin
     $ which pit
     /usr/local/bin/pit
     $ pit version
