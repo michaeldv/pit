@@ -58,27 +58,29 @@ Pit distribution comes with tools/commit-msg file. Copy this file to
     $ cp ~/pit/tools/commit-msg .git/hooks
     $ chmod +x .git/hooks/commit-msg
 
-Create git branch using task number as a branch name. Now on every commit to
-the branch the hook will prompt you to update task status. The hook appends
-Pit task number to the commit message, updates Pit task status, and creates
-task note with the commit massage. For example:
+Create Git branch using Pit task number as leading or trailing digits of the
+branch name. Now on every commit to the branch the hook will prompt you to
+update task status. The hook appends Pit task number to the commit message,
+updates Pit task status, and creates task note with the commit massage.
 
-    $ git checkout -b 2
-    Switched to a new branch '2'
+For example:
+
+    $ git checkout -b bugfix-42
+    Switched to a new branch 'bugfix-42'
 
     $ touch README
     $ git add .
     $ git commit -am "Added README file"
-    What is the status of task 2?
+    What is the status of task 42?
       (I)n progress
       (P)ostponed
       (O)pen
       (D)one
-    Enter the status for task 2 [D]:
+    Enter the status for task 42 [D]:
     i
-    updated task 2: My second task (status: in progress)
-    created note 2: Added README file [task 2, status:in progress] (task 2)
-    [2 0d930fb] Added README file [task 2, status:in progress]
+    updated task 42: My second task (status: in progress)
+    created note 42: Added README file [task 42, status:in progress] (task 42)
+    [bugfix-2 0d930fb] Added README file [task 42, status:in progress]
      0 files changed, 0 insertions(+), 0 deletions(-)
      create mode 100644 README
 
@@ -189,7 +191,7 @@ A few tips to get you going:
 ### License ###
 Copyright (c) 2010 Michael Dvorkin
 
-mike[at]dvorkin.net aka mike[at]fatfreecrm.com
+mike[at]dvorkin.net aka mike[at]fatfreecrm.com aka twitter.com/mid
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHORS "AS IS" AND ANY EXPRESS 
 OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 

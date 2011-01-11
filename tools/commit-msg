@@ -3,7 +3,9 @@
 # Sample Pit integration hook.
 #
 # 1. Appends Pit task number to the commit message when you use
-#    task number as your git branch name.
+#    task number as part of your Git branch name. Specifically,
+#    leading or trailing digits of the branch name are treated
+#    as Pit task number.
 #
 # 2. Lets you specify task status and updates it in Pit accordingly.
 #
@@ -18,8 +20,15 @@ exec < /dev/tty
 ref=$(git symbolic-ref HEAD 2> /dev/null) || return
 branch=${ref#refs/heads/}
 
-if [[ $branch =~ ^([0-9]+)$ ]]
-then
+if [[ $branch =~ ^([0-9]+) ]]; then
+  pit_task=${BASH_REMATCH[1]}
+else
+  if [[ $branch =~ ([0-9]+)$ ]]; then
+    pit_task=${BASH_REMATCH[1]}
+  fi
+fi
+
+if [ -n "$pit_task" ]; then
   pit_task=${BASH_REMATCH[1]}
 
   echo "What is the status of task ${pit_task}?"
