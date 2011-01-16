@@ -36,6 +36,7 @@ if [ -n "$pit_task" ]; then
   echo "  (P)ostponed"
   echo "  (O)pen"
   echo "  (D)one"
+  echo "  (T)emp commit, ignore"
   echo "Enter the status for task ${pit_task} [D]: "
   read selection
 
@@ -50,10 +51,14 @@ if [ -n "$pit_task" ]; then
     'o'|'O' )
       status="open"
       ;;
+    't'|'T' )
+      # This is a test commit and pit should ignore it
+      exit 0
+      ;;
   esac
 
   commit="`grep -v "^#" $1`"
-  append="[task ${pit_task}, status:${status}]" 
+  append="[task ${pit_task}, status:${status}]"
   echo >&2 "$append" >> "$1"
   "${pit}" task -e "${pit_task}" -s "${status}"
   "${pit}" note -c "${commit} ${append}"
