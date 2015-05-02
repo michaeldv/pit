@@ -24,7 +24,10 @@ static char *pit_file_name()
 
     if (!*file_name) {
         char *penv = getenv("PITFILE");
-        strcpy(file_name, expand_path(penv ? penv : PITFILE, file_name));
+        char *expanded = expand_path(penv ? penv : PITFILE, file_name);
+        if (expanded != file_name) {
+                strcpy(file_name, expanded);
+        }
     }
 
     return file_name;
