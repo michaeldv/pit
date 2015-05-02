@@ -45,7 +45,7 @@ void die(char *message, ...)
     }
 
     free_externals();
-    exit(0);
+    exit(1);
 }
 /*
 ** Forceful death.
@@ -59,7 +59,7 @@ void perish(char *prefix)
     perror(NULL);
 
     free_externals();
-    exit(0);
+    exit(1);
 }
 
 void pit_version(char *argv[])
@@ -89,5 +89,5 @@ int main(int argc, char *argv[]) {
 
     handler[candidate](&argv[1]);
     free_externals();
-    return 1;
+    return 0;
 }
